@@ -10,6 +10,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import util.Constants;
 
 /**
  *
@@ -30,7 +31,7 @@ public class Server implements Runnable {
 
     private void startConnection() {
         try {
-            myServerSocket = new ServerSocket(5005);//Constants.PORT_NUMBER
+            myServerSocket = new ServerSocket(Constants.PORT_NUMBER);
 
             thread= new Thread(this);
             thread.start();
@@ -54,5 +55,9 @@ public class Server implements Runnable {
                 ex.printStackTrace();
             }
         }
+    }
+    
+    public static void main(String[] args) {
+        new Server();
     }
 }
