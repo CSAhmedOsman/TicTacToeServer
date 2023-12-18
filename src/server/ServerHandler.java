@@ -54,10 +54,8 @@ public class ServerHandler extends Thread {
         try {
             while (isRunning) {
                 String gsonRequest = in.readLine();
-                if (!gsonRequest.isEmpty()) {
-                    System.out.println("Handle Responce");
+                if (!gsonRequest.isEmpty())
                     handleRequest(gsonRequest);
-                }
             }
         } catch (IOException ex) {
             try {
@@ -109,11 +107,12 @@ public class ServerHandler extends Thread {
             case 10:
                 // TODO sendMessage();
                 break;
+            case 11:
+                //getAvailablePlayers();
         }
     }
     
     private void register() throws JsonSyntaxException {
-        System.out.println("Regsiter Function In The Server");
         Player newPlayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
         //Add This New Player To DB
         boolean isRegisterd = true;
@@ -129,18 +128,15 @@ public class ServerHandler extends Thread {
     }
 
     private void login() throws JsonSyntaxException {
-        System.out.println("Login Function In The Server");
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
         int playerId= 2;
-        //checkInDB();
+        //int playerId= checkInDB(currentPlayer);
 
         ArrayList<Integer> jsonArr = new ArrayList();
         jsonArr.add(Constants.LOGIN);
         jsonArr.add(playerId);
 
         String gsonRequest = gson.toJson(jsonArr);
-        System.out.println("Ana Hna And Al Login Server");
-        System.out.println("Serialized JSON: " + gsonRequest);
         out.println(gsonRequest);
     }
 
