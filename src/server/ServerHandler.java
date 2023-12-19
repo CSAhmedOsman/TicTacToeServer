@@ -41,11 +41,11 @@ public class ServerHandler extends Thread {
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new PrintStream(socket.getOutputStream());
+            playersSocket.add(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        playersSocket.add(this);
+        
         start();
     }
 
@@ -63,6 +63,7 @@ public class ServerHandler extends Thread {
                 in.close();
                 socket.close();
                 isRunning = false;
+                playersSocket.remove(this);
             } catch (IOException ex1) {
                 Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex1);
             }
@@ -74,7 +75,7 @@ public class ServerHandler extends Thread {
         Type listType = new TypeToken<ArrayList<Object>>() {
         }.getType();
         requestData = gson.fromJson(gsonRequest, listType);
-        double action = (double) requestData.get(0);
+        int action = (int) requestData.get(0);
 
         switch ((int) action) {
             case Constants.REGISTER:
@@ -123,7 +124,6 @@ public class ServerHandler extends Thread {
         jsonArr.add(isRegisterd);
 
         String gsonRequest = gson.toJson(jsonArr);
-        System.out.println("Serialized JSON: " + gsonRequest);
         out.println(gsonRequest);
     }
 
