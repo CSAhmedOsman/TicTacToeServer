@@ -32,6 +32,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.apache.derby.jdbc.ClientDriver;
 
 /**
  *
@@ -495,7 +496,7 @@ public class ServerStatus extends AnchorPane {
                 btnSwitch.setText("On");
                 btnStatus.setStyle("-fx-background-color: #ff0000");
                 btnStatus.setText("Disconnected");
-                System.out.println("Disconnected from SQL Server.");
+                System.out.println("Disconnected from DataBase Server.");
             
             } catch (SQLException e) {
                 System.out.println("Error while disconnecting: " + e.getMessage());
@@ -511,14 +512,14 @@ public class ServerStatus extends AnchorPane {
         String password = "root";
         Connection connection = null;
         try {
-            String url = "jdbc:sqlserver://" + server + ";databaseName=" + database;
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            connection = DriverManager.getConnection(url, username, password);
+            DriverManager.registerDriver(new ClientDriver());
+             connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", "root", "root");
+          
             isConnected = true;
             btnSwitch.setText("Off");
             btnStatus.setStyle("-fx-background-color: #3bd035");
             btnStatus.setText("Connected");
-            System.out.println("Connected to SQL Server.");
+            System.out.println("Connected to DataBase.");
         } catch (SQLException e) {
             isConnected = false;
             btnSwitch.setText("On");
@@ -542,7 +543,7 @@ public class ServerStatus extends AnchorPane {
 
             resultSet.close();
             statement.close();
-            System.out.println("Connected to SQL Server.");
+            System.out.println("Connected to TicTacToeDB.");
         } catch (SQLException ex) {
             showAlert("Server is Disconected!", "The connection to SQL Server has been closed.");
             Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
@@ -551,7 +552,7 @@ public class ServerStatus extends AnchorPane {
 
     private void displayOnlineplayers(Connection connection) {
         try {
-            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isAvailable = 0";
+            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isAvailable = false";
 
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(countPlayersQuery);
@@ -564,7 +565,7 @@ public class ServerStatus extends AnchorPane {
 
             resultSet.close();
             statement.close();
-            System.out.println("Connected to SQL Server.");
+            System.out.println("Connected to TicTacToeDB.");
         } catch (SQLException ex) {
             showAlert("Server is Disconected!", "The connection to SQL Server has been closed.");
             Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
@@ -573,7 +574,7 @@ public class ServerStatus extends AnchorPane {
 
     private void displayAvailableplayers(Connection connection) {
         try {
-            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isAvailable = 1";
+            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isAvailable = true";
             // Create statement and execute query
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(countPlayersQuery);

@@ -5,9 +5,9 @@
  */
 package ui;
 
-
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,6 +31,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.apache.derby.jdbc.ClientDriver;
 
 public class ServerLogin extends AnchorPane {
 
@@ -389,11 +390,11 @@ public class ServerLogin extends AnchorPane {
         getChildren().add(btnConnect);
         getChildren().add(statusLabel);
 
-        textDBname.setText("gameDB");
+        textDBname.setText("TicTacToeDB");
         textDBname.setDisable(true);
-        textServer.setText("DESKTOP-C2J9487:1433");
+        textServer.setText("5005");
         textServer.setDisable(true);
-        
+
         btnConnect.setOnAction(e -> connectToDatabase());
         btnMin.setOnAction(e -> {
             Stage stage = (Stage) btnMin.getScene().getWindow();
@@ -408,46 +409,36 @@ public class ServerLogin extends AnchorPane {
     }
 
     private void connectToDatabase() {
-        String server = "DESKTOP-C2J9487:1433";
-        String database = "gameDB";
+      
         String username = textUserName.getText();
         String password = passwordField.getText();
 
         try {
-            // SQL Server JDBC URL
-            String url = "jdbc:sqlserver://" + server + ";databaseName=" + database;
-
-            // Register SQL Server JDBC driver
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-
-            // Establish a connection
-            Connection connection = DriverManager.getConnection(url, username, password);
-
-            // Connection successful
+          
+            DriverManager.registerDriver(new ClientDriver());
+            Connection connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
+       
             statusLabel.setText("Connected to database!");
             Stage stage = (Stage) btnConnect.getScene().getWindow();
             navigateToNextScene(stage, connection);
 
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             // Connection failed
             statusLabel.setTextFill(Color.RED);
-            statusLabel.setText("Connection failed: " + e.getMessage());
+            statusLabel.setText("Connection failed: \n" + e.getMessage());
         }
     }
 
     private void navigateToNextScene(Stage stage, Connection connection) {
-     
+
         Stage newStage = new Stage();
         newStage.initStyle(StageStyle.TRANSPARENT);
         Parent root = new ServerStatus(connection);
         Scene scene = new Scene(root);
- 
+
         newStage.setScene(scene);
         newStage.show();
-
-// Close the current stage (scene)
-          
         stage.close();
-        
+
     }
 }
