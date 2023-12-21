@@ -5,12 +5,13 @@
  */
 package ui;
 
+import java.io.IOException;
+import server.Server;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
@@ -24,7 +25,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -32,6 +32,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.derby.jdbc.ClientDriver;
+import util.Database;
 
 public class ServerLogin extends AnchorPane {
 
@@ -72,8 +73,9 @@ public class ServerLogin extends AnchorPane {
     private Label statusLabel;
     private double xOffset = 0;
     private double yOffset = 0;
+    Server server;
 
-    public ServerLogin() {
+    public ServerLogin(Stage stage) {
 
         rectangle = new Rectangle();
         label = new Label();
@@ -394,38 +396,45 @@ public class ServerLogin extends AnchorPane {
         textDBname.setDisable(true);
         textServer.setText("5005");
         textServer.setDisable(true);
-
-        btnConnect.setOnAction(e -> connectToDatabase());
+        
+        btnConnect.setOnAction(e -> {
+            connectToServer();
+            connectToDatabase();
+            navigateToNextScene(stage, Database.getConnection());
+        });
         btnMin.setOnAction(e -> {
-            Stage stage = (Stage) btnMin.getScene().getWindow();
             stage.setIconified(true); // This will minimize the window
         });
         btnClose.setOnAction(e -> {
-            Stage stage = (Stage) btnClose.getScene().getWindow();
             Platform.exit();
             stage.close();
         });
-
     }
 
-    private void connectToDatabase() {
-      
+    private boolean connectToDatabase() {
         String username = textUserName.getText();
         String password = passwordField.getText();
-
         try {
-          
             DriverManager.registerDriver(new ClientDriver());
             Connection connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
-       
             statusLabel.setText("Connected to database!");
-            Stage stage = (Stage) btnConnect.getScene().getWindow();
-            navigateToNextScene(stage, connection);
-
+            return true;
         } catch (SQLException e) {
             // Connection failed
             statusLabel.setTextFill(Color.RED);
-            statusLabel.setText("Connection failed: \n" + e.getMessage());
+            statusLabel.setText("DB Connection failed: \n" + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean connectToServer() {
+        try {
+            server = new Server();
+            return true;
+        } catch (IOException e) {
+            statusLabel.setTextFill(Color.RED);
+            statusLabel.setText("Server Connection failed: \n" + e.getMessage());
+            return false;
         }
     }
 
@@ -433,9 +442,9 @@ public class ServerLogin extends AnchorPane {
 
         Stage newStage = new Stage();
         newStage.initStyle(StageStyle.TRANSPARENT);
-        Parent root = new ServerStatus(connection);
+        Parent root = new ServerStatus(connection, server);
         Scene scene = new Scene(root);
-
+        
         newStage.setScene(scene);
         newStage.show();
         stage.close();

@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
 import java.lang.reflect.Type;
+import util.Database;
 
 /**
  *
@@ -26,7 +27,8 @@ import java.lang.reflect.Type;
  */
 public class ServerHandler extends Thread {
 
-    public Vector<ServerHandler> playersSocket = new Vector(); //maybe Set
+    public static Vector<ServerHandler> playersSocket = new Vector(); //maybe Set
+    private int playerId;
     public DataInputStream in;
     public PrintStream out;
     public Socket socket;
@@ -63,6 +65,7 @@ public class ServerHandler extends Thread {
                 in.close();
                 socket.close();
                 isRunning = false;
+                
                 playersSocket.remove(this);
             } catch (IOException ex1) {
                 Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex1);
@@ -75,7 +78,7 @@ public class ServerHandler extends Thread {
         Type listType = new TypeToken<ArrayList<Object>>() {
         }.getType();
         requestData = gson.fromJson(gsonRequest, listType);
-        int action = (int) requestData.get(0);
+        double action = (double) requestData.get(0);
 
         switch ((int) action) {
             case Constants.REGISTER:
@@ -115,36 +118,26 @@ public class ServerHandler extends Thread {
     
     private void register() throws JsonSyntaxException {
         Player newPlayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
-        //Add This New Player To DB
-        boolean isRegisterd = true;
-        //boolean isRegisterd = addToDB(newPlayer);
+        boolean isRegisterd = Database.registerPlayer(newPlayer);
 
-        ArrayList jsonArr = new ArrayList();
-        jsonArr.add(Constants.REGISTER);
-        jsonArr.add(isRegisterd);
+        ArrayList jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.REGISTER);
+        jsonResponse.add(isRegisterd);
 
-        String gsonRequest = gson.toJson(jsonArr);
+        String gsonRequest = gson.toJson(jsonResponse);
         out.println(gsonRequest);
     }
 
     private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
-        int playerId= 2;
-        //int playerId= checkInDB(currentPlayer);
+        System.out.println(currentplayer.getEmail()+" "+ currentplayer.getPassword());
+        int authenticatePlayerId= Database.authenticatePlayer(currentplayer);
 
         ArrayList<Integer> jsonArr = new ArrayList();
         jsonArr.add(Constants.LOGIN);
-        jsonArr.add(playerId);
+        jsonArr.add(authenticatePlayerId);
 
         String gsonRequest = gson.toJson(jsonArr);
         out.println(gsonRequest);
-    }
-
-    private boolean checkInDB() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private boolean addToDB(Player newPlayer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

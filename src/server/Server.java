@@ -21,23 +21,19 @@ public class Server implements Runnable {
     ServerSocket myServerSocket;
     Thread thread;
     boolean isRunning;
+
     {
-        isRunning= true;
+        isRunning = true;
     }
-    
-    public Server() {
+
+    public Server() throws IOException {
         startConnection();
     }
 
-    private void startConnection() {
-        try {
-            myServerSocket = new ServerSocket(Constants.PORT_NUMBER);
-
-            thread= new Thread(this);
-            thread.start();
-        } catch (IOException e) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
-        }
+    private void startConnection() throws IOException {
+        myServerSocket = new ServerSocket(Constants.PORT_NUMBER);
+        thread = new Thread(this);
+        thread.start();
     }
 
     @Override
@@ -49,15 +45,26 @@ public class Server implements Runnable {
             }
         } catch (IOException e) {
             try {
-                isRunning= false;
+                isRunning = false;
                 myServerSocket.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         }
     }
-    
-    public static void main(String[] args) {
-        new Server();
+
+    public void close() {
+        try {
+            for (ServerHandler s : ServerHandler.playersSocket) {
+                s.in.close();
+                s.out.close();
+                s.socket.close();
+            }
+            isRunning = false;
+            myServerSocket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
     }
 }

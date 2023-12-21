@@ -23,7 +23,7 @@ public class ServerApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = new ServerLogin();
+        Parent root = new ServerLogin(stage);
          stage.initStyle(StageStyle.TRANSPARENT);
         Scene scene = new Scene(root);
          root.setOnMousePressed(event -> {
