@@ -27,7 +27,7 @@ import util.Database;
  */
 public class ServerHandler extends Thread {
 
-    public static Vector<ServerHandler> playersSocket = new Vector(); //maybe Set
+    private static final Vector<ServerHandler> playersSocket = new Vector(); //maybe Set
     private int playerId;
     public DataInputStream in;
     public PrintStream out;
@@ -139,5 +139,17 @@ public class ServerHandler extends Thread {
 
         String gsonRequest = gson.toJson(jsonArr);
         out.println(gsonRequest);
+    }
+    
+    public static void closeSockets() {
+        try {
+            for (ServerHandler serverHandler : playersSocket) {
+                serverHandler.in.close();
+                serverHandler.out.close();
+                serverHandler.socket.close();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

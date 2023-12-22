@@ -52,19 +52,14 @@ public class Server implements Runnable {
             }
         }
     }
-
-    public void close() {
+    
+    private void close() {
         try {
-            for (ServerHandler s : ServerHandler.playersSocket) {
-                s.in.close();
-                s.out.close();
-                s.socket.close();
-            }
-            isRunning = false;
+            ServerHandler.closeSockets();
             myServerSocket.close();
+            isRunning = false;
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-
         }
     }
 }
