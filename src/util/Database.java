@@ -42,11 +42,10 @@ public class Database {
     }
 
     public static int authenticatePlayer(Player player) {
-        Connection connection = getConnection();
+        connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-        System.out.println(player.getEmail() + " " + player.getPassword());
-
+        
         try {
             String query = "SELECT id FROM player WHERE email = ? AND password = ?";
             preparedStatement = connection.prepareStatement(query);
@@ -72,9 +71,9 @@ public class Database {
             }
         }
     }
-
+    
     public static boolean registerPlayer(Player player) {
-        Connection connection = getConnection();
+        connection = getConnection();
         PreparedStatement preparedStatement = null;
 
         try {
@@ -87,7 +86,7 @@ public class Database {
             preparedStatement.setBoolean(5, false);
 
             int rowsAffected = preparedStatement.executeUpdate();
-
+            
             return rowsAffected > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -96,7 +95,7 @@ public class Database {
             closeStatement(preparedStatement);
         }
     }
-
+    
     public static String getPlayerName(int playerId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
