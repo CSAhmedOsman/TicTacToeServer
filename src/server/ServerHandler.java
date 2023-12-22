@@ -47,7 +47,7 @@ public class ServerHandler extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         start();
     }
 
@@ -56,8 +56,9 @@ public class ServerHandler extends Thread {
         try {
             while (isRunning) {
                 String gsonRequest = in.readLine();
-                if (!gsonRequest.isEmpty())
+                if (!gsonRequest.isEmpty()) {
                     handleRequest(gsonRequest);
+                }
             }
         } catch (IOException ex) {
             try {
@@ -65,7 +66,7 @@ public class ServerHandler extends Thread {
                 in.close();
                 socket.close();
                 isRunning = false;
-                
+
                 PLAYERS_SOCKET.remove(this);
             } catch (IOException ex1) {
                 Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex1);
@@ -113,9 +114,12 @@ public class ServerHandler extends Thread {
                 break;
             case 11:
                 //getAvailablePlayers();
+                break;
+            case Constants.BROADCAST_MESSAGE:
+                sendMessageToAll();
         }
     }
-    
+
     private void register() throws JsonSyntaxException {
         Player newPlayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
         boolean isRegisterd = Database.registerPlayer(newPlayer);
@@ -130,17 +134,34 @@ public class ServerHandler extends Thread {
 
     private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
-        System.out.println(currentplayer.getEmail()+" "+ currentplayer.getPassword());
-        int authenticatePlayerId= Database.authenticatePlayer(currentplayer);
+        int authenticatePlayerId = Database.authenticatePlayer(currentplayer);
 
-        ArrayList<Integer> jsonArr = new ArrayList();
-        jsonArr.add(Constants.LOGIN);
-        jsonArr.add(authenticatePlayerId);
+        ArrayList<Integer> jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.LOGIN);
+        jsonResponse.add(authenticatePlayerId);
 
-        String gsonRequest = gson.toJson(jsonArr);
-        out.println(gsonRequest);
+        String gsonResponse = gson.toJson(jsonResponse);
+        out.println(gsonResponse);
     }
-    
+
+    private void sendMessageToAll() {
+        double sourceId = (double) requestData.get(1);
+        String broadCastMessage = (String) requestData.get(2);
+        String sourcePlayerName = Database.getPlayerName((int) sourceId);
+        
+        ArrayList<Object> jsonResponse = new ArrayList();
+        PLAYERS_SOCKET.forEach((serverHandler) -> {
+            jsonResponse.clear();
+            jsonResponse.add(Constants.BROADCAST_MESSAGE);
+            jsonResponse.add(sourcePlayerName);
+            jsonResponse.add(broadCastMessage);
+
+            String gsonResponse = gson.toJson(jsonResponse);
+
+            serverHandler.out.println(gsonResponse);
+        });
+    }
+
     public static void closeSockets() {
         try {
             for (ServerHandler serverHandler : PLAYERS_SOCKET) {
@@ -152,4 +173,5 @@ public class ServerHandler extends Thread {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
 }

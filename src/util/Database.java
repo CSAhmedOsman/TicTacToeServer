@@ -97,6 +97,36 @@ public class Database {
         }
     }
     
+    public static String getPlayerName(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            // Use a prepared statement to prevent SQL injection
+            String query = "SELECT name FROM player WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                // If a record is found, return the player name
+                return resultSet.getString("name");
+            } else {
+                // If no record is found, return null or an appropriate default value
+                return null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player name");
+        } finally {
+            // Close resources in the reverse order of their creation
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    }
+    
     public static void closeConnection() {
         if (connection != null) {
             try {
