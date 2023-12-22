@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
 import java.lang.reflect.Type;
+import util.Database;
 
 /**
  *
@@ -83,32 +84,34 @@ public class ServerHandler extends Thread {
             case Constants.LOGIN:
                 login();
                 break;
-            case 3:
-                //TODO request();
+            case Constants.GET_AVAILIABLE_PLAYERS:
+                getAvailablePlayers();
                 break;
             case 4:
-                //TODO accept();
+                //TODO request();
                 break;
             case 5:
-                //TODO updateBoard();
+                //TODO accept();
                 break;
             case 6:
-                //TODO logout();
+                //TODO updateBoard();
                 break;
             case 7:
-                // TODO save();
+                //TODO logout();
                 break;
             case 8:
-                //TODO finish();
+                // TODO save();
                 break;
             case 9:
-                //TODO updateScore();
+                //TODO finish();
                 break;
             case 10:
-                // TODO sendMessage();
+                //TODO updateScore();
                 break;
             case 11:
-                //getAvailablePlayers();
+                // TODO sendMessage();
+                break;
+            
         }
     }
     
@@ -140,11 +143,15 @@ public class ServerHandler extends Thread {
         out.println(gsonRequest);
     }
 
-    private boolean checkInDB() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+   
+    private void getAvailablePlayers() {
+       ArrayList<Player> players= Database.getAvaliablePlayer();
+       
+       ArrayList<Object> jsonResponce = new ArrayList();
+        jsonResponce.add(Constants.GET_AVAILIABLE_PLAYERS);
+        jsonResponce.add(players);
 
-    private boolean addToDB(Player newPlayer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String gsonRequest = gson.toJson(jsonResponce);
+        out.println(gsonRequest);
     }
 }
