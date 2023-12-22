@@ -144,13 +144,14 @@ public class ServerHandler extends Thread {
 
     private void sendMessage() {
         Message message = gson.fromJson(gson.toJson(requestData.get(1)), Message.class);
+        
         ServerHandler destinationSocket = getDestinationPlayerSocket(message.getDestinationId());
-        String destinationPlayerName = Database.getPlayerName(message.getSourceId());
+        String srcPlayerName = Database.getPlayerName(message.getSourceId());
         
         ArrayList<Object> jsonArr = new ArrayList();
         jsonArr.add(Constants.SENDMESSAGE);
         jsonArr.add(message.getMessage());
-        jsonArr.add(destinationPlayerName);
+        jsonArr.add(srcPlayerName);
         
         String gsonRequest = gson.toJson(jsonArr);
         destinationSocket.out.println(gsonRequest);
@@ -158,9 +159,11 @@ public class ServerHandler extends Thread {
 
     private ServerHandler getDestinationPlayerSocket(int destinationId) {
         ServerHandler destinationHandler = null;
-        for (ServerHandler serverHandler : playersSocket) {
-            if(destinationId== serverHandler.playerId)
-                destinationHandler = serverHandler;
+        for (ServerHandler currentSocket : playersSocket) {
+            if(destinationId== currentSocket.playerId){
+                destinationHandler = currentSocket;
+                break;
+            }
         }
         return destinationHandler;
     }
