@@ -147,17 +147,16 @@ public class ServerHandler extends Thread {
     private void sendMessageToAll() {
         double sourceId = (double) requestData.get(1);
         String broadCastMessage = (String) requestData.get(2);
+
         String sourcePlayerName = Database.getPlayerName((int) sourceId);
-        
+
         ArrayList<Object> jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.BROADCAST_MESSAGE);
+        jsonResponse.add(sourcePlayerName);
+        jsonResponse.add(broadCastMessage);
+        String gsonResponse = gson.toJson(jsonResponse);
+        
         PLAYERS_SOCKET.forEach((serverHandler) -> {
-            jsonResponse.clear();
-            jsonResponse.add(Constants.BROADCAST_MESSAGE);
-            jsonResponse.add(sourcePlayerName);
-            jsonResponse.add(broadCastMessage);
-
-            String gsonResponse = gson.toJson(jsonResponse);
-
             serverHandler.out.println(gsonResponse);
         });
     }
