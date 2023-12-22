@@ -42,11 +42,11 @@ public class Database {
     }
 
     public static int authenticatePlayer(Player player) {
-        connection = getConnection();
+        Connection connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-        System.out.println(player.getEmail()+" "+player.getPassword());
-        
+        System.out.println(player.getEmail() + " " + player.getPassword());
+
         try {
             String query = "SELECT id FROM player WHERE email = ? AND password = ?";
             preparedStatement = connection.prepareStatement(query);
@@ -72,9 +72,9 @@ public class Database {
             }
         }
     }
-    
+
     public static boolean registerPlayer(Player player) {
-        connection = getConnection();
+        Connection connection = getConnection();
         PreparedStatement preparedStatement = null;
 
         try {
@@ -83,11 +83,11 @@ public class Database {
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getEmail());
             preparedStatement.setString(3, player.getPassword());
-            preparedStatement.setBoolean(4, false);
+            preparedStatement.setBoolean(4, true);
             preparedStatement.setBoolean(5, false);
 
             int rowsAffected = preparedStatement.executeUpdate();
-            
+
             return rowsAffected > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -96,7 +96,7 @@ public class Database {
             closeStatement(preparedStatement);
         }
     }
-    
+
     public static String getPlayerName(int playerId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
@@ -127,8 +127,9 @@ public class Database {
     public static void closeConnection() {
         if (connection != null) {
             try {
-                if(!connection.isClosed())
+                if (!connection.isClosed()) {
                     connection.close();
+                }
                 System.out.println("Connection closed");
             } catch (SQLException e) {
                 e.printStackTrace();
