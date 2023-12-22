@@ -53,7 +53,7 @@ public class Server implements Runnable {
         }
     }
     
-    private void close() {
+    public void close() {
         try {
             ServerHandler.closeSockets();
             myServerSocket.close();

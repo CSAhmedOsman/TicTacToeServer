@@ -27,7 +27,7 @@ import util.Database;
  */
 public class ServerHandler extends Thread {
 
-    private static final Vector<ServerHandler> playersSocket = new Vector(); //maybe Set
+    private static final Vector<ServerHandler> PLAYERS_SOCKET = new Vector(); //maybe Set
     private int playerId;
     public DataInputStream in;
     public PrintStream out;
@@ -43,7 +43,7 @@ public class ServerHandler extends Thread {
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new PrintStream(socket.getOutputStream());
-            playersSocket.add(this);
+            PLAYERS_SOCKET.add(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -66,7 +66,7 @@ public class ServerHandler extends Thread {
                 socket.close();
                 isRunning = false;
                 
-                playersSocket.remove(this);
+                PLAYERS_SOCKET.remove(this);
             } catch (IOException ex1) {
                 Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex1);
             }
@@ -143,7 +143,7 @@ public class ServerHandler extends Thread {
     
     public static void closeSockets() {
         try {
-            for (ServerHandler serverHandler : playersSocket) {
+            for (ServerHandler serverHandler : PLAYERS_SOCKET) {
                 serverHandler.in.close();
                 serverHandler.out.close();
                 serverHandler.socket.close();
