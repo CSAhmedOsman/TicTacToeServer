@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
 import java.lang.reflect.Type;
+import model.Message;
 import util.Database;
 
 /**
@@ -108,8 +109,8 @@ public class ServerHandler extends Thread {
             case 9:
                 //TODO updateScore();
                 break;
-            case 10:
-                // TODO sendMessage();
+            case Constants.SENDMESSAGE:
+                sendMessage();
                 break;
             case 11:
                 //getAvailablePlayers();
@@ -139,5 +140,28 @@ public class ServerHandler extends Thread {
 
         String gsonRequest = gson.toJson(jsonArr);
         out.println(gsonRequest);
+    }
+
+    private void sendMessage() {
+        Message message = gson.fromJson(gson.toJson(requestData.get(1)), Message.class);
+        ServerHandler destinationSocket = getDestinationPlayerSocket(message.getDestinationId());
+        String destinationPlayerName = Database.getPlayerName(message.getSourceId());
+        
+        ArrayList<Object> jsonArr = new ArrayList();
+        jsonArr.add(Constants.SENDMESSAGE);
+        jsonArr.add(message.getMessage());
+        jsonArr.add(destinationPlayerName);
+        
+        String gsonRequest = gson.toJson(jsonArr);
+        destinationSocket.out.println(gsonRequest);
+    }
+
+    private ServerHandler getDestinationPlayerSocket(int destinationId) {
+        ServerHandler destinationHandler = null;
+        for (ServerHandler serverHandler : playersSocket) {
+            if(destinationId== serverHandler.playerId)
+                destinationHandler = serverHandler;
+        }
+        return destinationHandler;
     }
 }

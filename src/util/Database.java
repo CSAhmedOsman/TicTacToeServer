@@ -42,7 +42,7 @@ public class Database {
     }
 
     public static int authenticatePlayer(Player player) {
-        Connection connection = getConnection();
+        connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         System.out.println(player.getEmail()+" "+player.getPassword());
@@ -74,7 +74,7 @@ public class Database {
     }
     
     public static boolean registerPlayer(Player player) {
-        Connection connection = getConnection();
+        connection = getConnection();
         PreparedStatement preparedStatement = null;
 
         try {
@@ -83,7 +83,7 @@ public class Database {
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getEmail());
             preparedStatement.setString(3, player.getPassword());
-            preparedStatement.setBoolean(4, true);
+            preparedStatement.setBoolean(4, false);
             preparedStatement.setBoolean(5, false);
 
             int rowsAffected = preparedStatement.executeUpdate();
@@ -97,10 +97,38 @@ public class Database {
         }
     }
     
+    public static String getPlayerName(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            String query = "SELECT name FROM player WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getString("name");
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player name");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    }
+    
+    // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {
         if (connection != null) {
             try {
-                connection.close();
+                if(!connection.isClosed())
+                    connection.close();
                 System.out.println("Connection closed");
             } catch (SQLException e) {
                 e.printStackTrace();
