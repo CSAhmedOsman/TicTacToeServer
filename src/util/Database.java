@@ -42,10 +42,9 @@ public class Database {
     }
 
     public static int authenticatePlayer(Player player) {
-        Connection connection = getConnection();
+        connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-        System.out.println(player.getEmail()+" "+player.getPassword());
         
         try {
             String query = "SELECT id FROM player WHERE email = ? AND password = ?";
@@ -74,7 +73,7 @@ public class Database {
     }
     
     public static boolean registerPlayer(Player player) {
-        Connection connection = getConnection();
+        connection = getConnection();
         PreparedStatement preparedStatement = null;
 
         try {
@@ -103,7 +102,6 @@ public class Database {
         ResultSet resultSet = null;
 
         try {
-            // Use a prepared statement to prevent SQL injection
             String query = "SELECT name FROM player WHERE id = ?";
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, playerId);
@@ -111,26 +109,26 @@ public class Database {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                // If a record is found, return the player name
                 return resultSet.getString("name");
             } else {
-                // If no record is found, return null or an appropriate default value
                 return null;
             }
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to get player name");
         } finally {
-            // Close resources in the reverse order of their creation
             closeResultSet(resultSet);
             closeStatement(preparedStatement);
         }
     }
     
+    // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {
         if (connection != null) {
             try {
-                connection.close();
+                if (!connection.isClosed()) {
+                    connection.close();
+                }
                 System.out.println("Connection closed");
             } catch (SQLException e) {
                 e.printStackTrace();
