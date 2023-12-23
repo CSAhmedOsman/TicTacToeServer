@@ -55,8 +55,9 @@ public class ServerHandler extends Thread {
         try {
             while (isRunning) {
                 String gsonRequest = in.readLine();
-                if (!gsonRequest.isEmpty())
+                if (!gsonRequest.isEmpty()) {
                     handleRequest(gsonRequest);
+                }
             }
         } catch (IOException ex) {
             try {
@@ -87,8 +88,8 @@ public class ServerHandler extends Thread {
             case Constants.GET_AVAILIABLE_PLAYERS:
                 getAvailablePlayers();
                 break;
-            case 4:
-                //TODO request();
+            case Constants.REQUEST:
+                request();
                 break;
             case 5:
                 //TODO accept();
@@ -111,10 +112,10 @@ public class ServerHandler extends Thread {
             case 11:
                 // TODO sendMessage();
                 break;
-            
+
         }
     }
-    
+
     private void register() throws JsonSyntaxException {
         Player newPlayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
         //Add This New Player To DB
@@ -132,7 +133,7 @@ public class ServerHandler extends Thread {
 
     private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
-        int playerId= 2;
+        int playerId = 2;
         //int playerId= checkInDB(currentPlayer);
 
         ArrayList<Integer> jsonArr = new ArrayList();
@@ -143,15 +144,37 @@ public class ServerHandler extends Thread {
         out.println(gsonRequest);
     }
 
-   
     private void getAvailablePlayers() {
-       ArrayList<Player> players= Database.getAvaliablePlayer();
-       
-       ArrayList<Object> jsonResponce = new ArrayList();
+        ArrayList<Player> players = Database.getAvaliablePlayer();
+
+        ArrayList<Object> jsonResponce = new ArrayList();
         jsonResponce.add(Constants.GET_AVAILIABLE_PLAYERS);
         jsonResponce.add(players);
 
         String gsonRequest = gson.toJson(jsonResponce);
         out.println(gsonRequest);
+    }
+
+    private void request() {
+        int senderId = (int) requestData.get(1);
+        int receiverId = (int) requestData.get(2);
+        
+        handleRequest(senderId, receiverId);
+        
+        boolean isRequestHandled = true;
+        ArrayList<Object> jsonResponse = new ArrayList<>();
+        jsonResponse.add(Constants.REQUEST);
+        jsonResponse.add(isRequestHandled);
+        String gsonResponse = gson.toJson(jsonResponse);
+        out.println(gsonResponse);
+        System.out.println("Request received from: " + senderId + " to: " + receiverId);
+        
+        
+    }
+
+    
+
+    private void handleRequest(int  senderId, int receiverId) {
+        
     }
 }

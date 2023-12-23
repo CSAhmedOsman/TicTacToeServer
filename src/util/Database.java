@@ -81,7 +81,7 @@ public class Database {
         PreparedStatement preparedStatement = null;
 
         try {
-            String query = "INSERT INTO player (name, email, password, isOnline, isPlaying) VALUES (?, ?, ?, ?, ?)";
+            String query = "INSERT INTO player (name, email, password, isOnline, ISAVAILABLE) VALUES (?, ?, ?, ?, ?)";
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getEmail());
@@ -108,7 +108,8 @@ public class Database {
         ResultSet rs = null;
         try {
             preparedStatement = connection.prepareStatement(
-                    "SELECT NAME, SCORE, ID FROM player WHERE ISAVAILABLE = true",
+                    
+                    "SELECT NAME, SCORE, id FROM player WHERE ISAVAILABLE = true AND ISONLINE = true",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY
             );
@@ -118,9 +119,9 @@ public class Database {
             while (rs.next()) {
                 String name = rs.getString("NAME");
                 int score = rs.getInt("SCORE");
-                int id = rs.getInt("ID");
+                int id = rs.getInt("id");
 
-                // Assuming you have a Player class
+                
                 Player player = new Player(id, name, score);
                 players.add(player);
             }
@@ -128,7 +129,7 @@ public class Database {
         } catch (SQLException ex) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            // Close resources in a finally block to ensure they are closed even if an exception occurs.
+            
             try {
                 if (rs != null) {
                     rs.close();
