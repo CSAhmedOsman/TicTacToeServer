@@ -10,6 +10,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import model.Player;
 
 /**
@@ -42,10 +45,12 @@ public class Database {
     }
 
     public static int authenticatePlayer(Player player) {
-        connection = getConnection();
+        Connection connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
+
         int authenticateId = -1;
+
         try {
             String query = "SELECT id FROM player WHERE email = ? AND password = ?";
             preparedStatement = connection.prepareStatement(query);
@@ -85,7 +90,7 @@ public class Database {
     public static boolean registerPlayer(Player player) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
-
+	int rowsAffected = 0;
         try {
             String query = "INSERT INTO player (name, email, password, isOnline, isAvailable, score) VALUES (?, ?, ?, ?, ?, ?)";
             preparedStatement = connection.prepareStatement(query);
@@ -99,14 +104,61 @@ public class Database {
             int rowsAffected = preparedStatement.executeUpdate();
 
             return rowsAffected > 0;
+
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Player registration failed");
         } finally {
             closeStatement(preparedStatement);
+            closeConnection();
         }
+            return rowsAffected > 0;
     }
-    
+
+    public static ArrayList<Player> getAvaliablePlayer() {
+        Connection connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ArrayList<Player> players = new ArrayList<>();
+        ResultSet rs = null;
+        try {
+            preparedStatement = connection.prepareStatement(
+                    
+                    "SELECT NAME, SCORE, id FROM player WHERE ISAVAILABLE = true AND ISONLINE = true",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY
+            );
+
+            rs = preparedStatement.executeQuery();
+
+            while (rs.next()) {
+                String name = rs.getString("NAME");
+                int score = rs.getInt("SCORE");
+                int id = rs.getInt("id");
+
+                
+                Player player = new Player(id, name, score);
+                players.add(player);
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return players;
+    }
+
     public static String getPlayerName(int playerId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
