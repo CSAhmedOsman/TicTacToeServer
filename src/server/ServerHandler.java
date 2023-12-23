@@ -29,9 +29,9 @@ public class ServerHandler extends Thread {
 
     private static final Vector<ServerHandler> PLAYERS_SOCKET = new Vector(); //maybe Set
     private int playerId;
+    public Socket socket;
     public DataInputStream in;
     public PrintStream out;
-    public Socket socket;
     boolean isRunning = true;
 
     Gson gson = new Gson();
