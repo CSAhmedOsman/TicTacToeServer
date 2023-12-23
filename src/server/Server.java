@@ -22,13 +22,20 @@ public class Server implements Runnable {
     Thread thread;
     boolean isRunning;
 
+    private static Server singletonServer;
+    
     {
         isRunning = true;
     }
 
-    public Server() throws IOException {
+    private Server() throws IOException {
         startConnection();
-        System.out.println("Server Called");
+    }
+    
+    public static Server getServer() throws IOException {
+        if(singletonServer == null)
+            singletonServer= new Server();
+        return singletonServer;
     }
 
     private void startConnection() throws IOException {
