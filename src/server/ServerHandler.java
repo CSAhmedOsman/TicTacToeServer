@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
 import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.Set;
 import util.Database;
 
 /**
@@ -28,7 +30,6 @@ import util.Database;
 public class ServerHandler extends Thread {
 
     private static final Vector<ServerHandler> PLAYERS_SOCKET = new Vector(); //maybe Set
-    private int playerId;
     public Socket socket;
     public DataInputStream in;
     public PrintStream out;
@@ -36,7 +37,7 @@ public class ServerHandler extends Thread {
 
     Gson gson = new Gson();
     ArrayList requestData;
-
+    
     public ServerHandler(Socket socket) {
 
         try {
@@ -44,11 +45,13 @@ public class ServerHandler extends Thread {
             in = new DataInputStream(socket.getInputStream());
             out = new PrintStream(socket.getOutputStream());
             PLAYERS_SOCKET.add(this);
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         start();
+        
     }
 
     @Override
@@ -155,8 +158,11 @@ public class ServerHandler extends Thread {
         jsonResponse.add(sourcePlayerName);
         jsonResponse.add(broadCastMessage);
         String gsonResponse = gson.toJson(jsonResponse);
+
+        System.err.println("aefd");
         
         PLAYERS_SOCKET.forEach((serverHandler) -> {
+            System.out.println(serverHandler);
             serverHandler.out.println(gsonResponse);
         });
     }
@@ -172,5 +178,4 @@ public class ServerHandler extends Thread {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }
