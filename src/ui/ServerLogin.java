@@ -409,6 +409,9 @@ public class ServerLogin extends AnchorPane {
             Platform.exit();
             stage.close();
         });
+        
+        textUserName.setText("root");
+        passwordField.setText("root");
     }
 
     private boolean connectToDatabase() {

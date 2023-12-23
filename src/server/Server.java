@@ -28,6 +28,7 @@ public class Server implements Runnable {
 
     public Server() throws IOException {
         startConnection();
+        System.out.println("Server Called");
     }
 
     private void startConnection() throws IOException {
@@ -41,6 +42,7 @@ public class Server implements Runnable {
         try {
             while (isRunning) {
                 Socket socket = myServerSocket.accept();
+                System.out.println("is Running Client 1");
                 new ServerHandler(socket);
             }
         } catch (IOException e) {
