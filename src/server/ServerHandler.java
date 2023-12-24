@@ -18,8 +18,15 @@ import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
 import java.lang.reflect.Type;
+
 import java.util.Vector;
 import model.Message;
+
+
+import java.util.HashSet;
+import java.util.Set;
+
+
 import util.Database;
 
 /**
@@ -90,29 +97,31 @@ public class ServerHandler extends Thread {
             case Constants.LOGIN:
                 login();
                 break;
-            case 3:
-                //TODO request();
+            case Constants.GET_AVAILIABLE_PLAYERS:
+                getAvailablePlayers();
                 break;
-            case 4:
-                //TODO accept();
+            case Constants.REQUEST:
+                request();
                 break;
             case 5:
-                //TODO updateBoard();
+                //TODO accept();
                 break;
             case 6:
-                //TODO logout();
+                //TODO updateBoard();
                 break;
             case 7:
-                // TODO save();
+                //TODO logout();
                 break;
             case 8:
-                //TODO finish();
+                // TODO save();
                 break;
             case 9:
-                //TODO updateScore();
+                //TODO finish();
                 break;
+
             case Constants.SENDMESSAGE:
                 sendMessage();
+    
                 break;
             case 11:
                 //getAvailablePlayers();
@@ -137,16 +146,47 @@ public class ServerHandler extends Thread {
     private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
 
+
         int authenticatePlayerId = Database.authenticatePlayer(currentplayer);
 
         if(authenticatePlayerId!= -1)
             playerId = authenticatePlayerId;
+
         ArrayList<Integer> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.LOGIN);
         jsonResponse.add(authenticatePlayerId);
 
         String gsonResponse = gson.toJson(jsonResponse);
         out.println(gsonResponse);
+    }
+
+
+    private void getAvailablePlayers() {
+        ArrayList<Player> players = Database.getAvaliablePlayer();
+
+        ArrayList<Object> jsonResponce = new ArrayList();
+        jsonResponce.add(Constants.GET_AVAILIABLE_PLAYERS);
+        jsonResponce.add(players);
+
+        String gsonRequest = gson.toJson(jsonResponce);
+        out.println(gsonRequest);
+    }
+
+    private void request() {
+        int senderId = (int) requestData.get(1);
+        int receiverId = (int) requestData.get(2);
+        
+        //handleRequest(senderId, receiverId);
+        
+        boolean isRequestHandled = true;
+        ArrayList<Object> jsonResponse = new ArrayList<>();
+        jsonResponse.add(Constants.REQUEST);
+        jsonResponse.add(isRequestHandled);
+        String gsonResponse = gson.toJson(jsonResponse);
+        out.println(gsonResponse);
+        System.out.println("Request received from: " + senderId + " to: " + receiverId);
+        
+        
     }
 
     private void sendMessageToAll() {
@@ -179,6 +219,7 @@ public class ServerHandler extends Thread {
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
+
     }
 
     private void sendMessage() {
