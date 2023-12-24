@@ -101,16 +101,12 @@ public class Database {
             preparedStatement.setBoolean(5, false);
             preparedStatement.setInt(6, 0);
 
-            int rowsAffected = preparedStatement.executeUpdate();
-
-            return rowsAffected > 0;
-
+            rowsAffected = preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Player registration failed");
         } finally {
             closeStatement(preparedStatement);
-            closeConnection();
         }
             return rowsAffected > 0;
     }
