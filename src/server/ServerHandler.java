@@ -170,7 +170,7 @@ public class ServerHandler extends Thread {
         int senderId = (int) requestData.get(1);
         int receiverId = (int) requestData.get(2);
         
-        handleRequest(senderId, receiverId);
+        //handleRequest(senderId, receiverId);
         
         boolean isRequestHandled = true;
         ArrayList<Object> jsonResponse = new ArrayList<>();
