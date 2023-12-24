@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.Player;
+import server.ServerHandler;
 
 /**
  *
@@ -90,7 +91,7 @@ public class Database {
     public static boolean registerPlayer(Player player) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
-	int rowsAffected = 0;
+        int rowsAffected = 0;
         try {
             String query = "INSERT INTO player (name, email, password, isOnline, isAvailable, score) VALUES (?, ?, ?, ?, ?, ?)";
             preparedStatement = connection.prepareStatement(query);
@@ -108,18 +109,19 @@ public class Database {
         } finally {
             closeStatement(preparedStatement);
         }
-            return rowsAffected > 0;
+        return rowsAffected > 0;
     }
 
-    public static ArrayList<Player> getAvaliablePlayer() {
+    public static ArrayList<Player> getAvailablePlayers() {
+        System.out.println("getAvailablePlayers from database");
         Connection connection = getConnection();
         PreparedStatement preparedStatement = null;
         ArrayList<Player> players = new ArrayList<>();
         ResultSet rs = null;
+
         try {
             preparedStatement = connection.prepareStatement(
-                    
-                    "SELECT NAME, SCORE, id FROM player WHERE ISAVAILABLE = true AND ISONLINE = true",
+                    "SELECT id, NAME, SCORE FROM PLAYER WHERE ISAVAILABLE = true",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY
             );
@@ -127,11 +129,10 @@ public class Database {
             rs = preparedStatement.executeQuery();
 
             while (rs.next()) {
+                int id = rs.getInt("id");
                 String name = rs.getString("NAME");
                 int score = rs.getInt("SCORE");
-                int id = rs.getInt("id");
 
-                
                 Player player = new Player(id, name, score);
                 players.add(player);
             }
@@ -139,7 +140,6 @@ public class Database {
         } catch (SQLException ex) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            
             try {
                 if (rs != null) {
                     rs.close();
@@ -154,7 +154,8 @@ public class Database {
 
         return players;
     }
-
+  
+    
     public static String getPlayerName(int playerId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
@@ -180,12 +181,44 @@ public class Database {
             closeStatement(preparedStatement);
         }
     }
+
+
+    public static Player getPlayerNameAndScore(int playerId) {
+         System.out.println("get data of Player from database");
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            String query = "SELECT name,SCORE FROM player WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return new Player(resultSet.getString("name"), resultSet.getInt("SCORE"));
+
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player name");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    }
+
+
     // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {
         if (connection != null) {
             try {
-                if (!connection.isClosed())
+                if (!connection.isClosed()) {
                     connection.close();
+                }
                 System.out.println("Connection closed");
             } catch (SQLException e) {
                 e.printStackTrace();
