@@ -119,6 +119,19 @@ public class ServerHandler extends Thread {
                 break;
             case Constants.BROADCAST_MESSAGE:
                 sendMessageToAll();
+                break;
+            case Constants.ADD_FRIEND:
+                addFriend();
+                break;
+            case Constants.REMOVE_FRIEND:
+                removeFriend();
+                break;
+            case Constants.BLOCK_PLAYER:
+                blockPlayer();
+                break;
+            case Constants.UN_BLOCK_PLAYER:
+                unBlockPlayer();
+                break;
         }
     }
 
@@ -160,11 +173,8 @@ public class ServerHandler extends Thread {
         jsonResponse.add(sourcePlayerName);
         jsonResponse.add(broadCastMessage);
         String gsonResponse = gson.toJson(jsonResponse);
-
-        System.err.println("aefd");
         
         PLAYERS_SOCKET.forEach((serverHandler) -> {
-            System.out.println(serverHandler);
             serverHandler.out.println(gsonResponse);
         });
     }
@@ -206,5 +216,58 @@ public class ServerHandler extends Thread {
             }
         }
         return destinationHandler;
+    }
+
+    private void addFriend() {
+        double playerId = (double) requestData.get(1);
+        double friendId = (double) requestData.get(2);
+
+        boolean isFriend = Database.addFriend((int) playerId, (int) friendId);
+        ArrayList jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.ADD_FRIEND);
+        jsonResponse.add(isFriend);
+
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);
+    }
+    
+    private void removeFriend() {
+        double playerId = (double) requestData.get(1);
+        double friendId = (double) requestData.get(2);
+
+        boolean isNotFriend = Database.removeFriend((int) playerId, (int) friendId);
+        ArrayList jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.REMOVE_FRIEND);
+        jsonResponse.add(isNotFriend);
+
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);
+    }
+
+    private void blockPlayer() {
+        double playerId = (double) requestData.get(1);
+        double friendId = (double) requestData.get(2);
+
+        removeFriend();
+        boolean isBlocked = Database.blockPlayer((int) playerId, (int) friendId);
+        ArrayList jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.BLOCK_PLAYER);
+        jsonResponse.add(isBlocked);
+
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);
+    }
+
+    private void unBlockPlayer() {
+        double playerId = (double) requestData.get(1);
+        double friendId = (double) requestData.get(2);
+
+        boolean isUnBlocked = Database.unBlockPlayer((int) playerId, (int) friendId);
+        ArrayList jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.UN_BLOCK_PLAYER);
+        jsonResponse.add(isUnBlocked);
+
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);
     }
 }
