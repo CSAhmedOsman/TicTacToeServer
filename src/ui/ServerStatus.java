@@ -33,6 +33,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.derby.jdbc.ClientDriver;
+import server.Server;
 
 /**
  *
@@ -75,7 +76,7 @@ public class ServerStatus extends AnchorPane {
     Connection Newconnection;
     Thread th;
 
-    public ServerStatus(Connection connection) {
+    public ServerStatus(Connection connection,Server server) {
 
         rectangle = new Rectangle();
         label = new Label();
@@ -404,6 +405,7 @@ public class ServerStatus extends AnchorPane {
             try {
                 if (!connection.isClosed()) {
                     connection.close();
+                    server.close();
                 }
             } catch (SQLException ex) {
                 Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
@@ -467,10 +469,6 @@ public class ServerStatus extends AnchorPane {
                 });
         }
     
-                
-
-    
-
     private Connection switchConnection(Connection connection) {
         if (isConnected) {
             th.suspend();
@@ -608,10 +606,11 @@ public class ServerStatus extends AnchorPane {
     private void navigateToNextScene(Stage stage) {
         Stage newStage = new Stage();
         newStage.initStyle(StageStyle.TRANSPARENT);
-        Parent root = new ServerLogin();
+        Parent root = new ServerLogin(stage);
         Scene scene = new Scene(root);
         newStage.setScene(scene);
         newStage.show();
+        
         stage.close();
     }
 }

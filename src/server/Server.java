@@ -21,23 +21,20 @@ public class Server implements Runnable {
     ServerSocket myServerSocket;
     Thread thread;
     boolean isRunning;
+
     {
-        isRunning= true;
+        isRunning = true;
     }
-    
-    public Server() {
+
+    public Server() throws IOException {
         startConnection();
+        System.out.println("Server Called");
     }
 
-    private void startConnection() {
-        try {
-            myServerSocket = new ServerSocket(Constants.PORT_NUMBER);
-
-            thread= new Thread(this);
-            thread.start();
-        } catch (IOException e) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
-        }
+    private void startConnection() throws IOException {
+        myServerSocket = new ServerSocket(Constants.PORT_NUMBER);
+        thread = new Thread(this);
+        thread.start();
     }
 
     @Override
@@ -45,11 +42,12 @@ public class Server implements Runnable {
         try {
             while (isRunning) {
                 Socket socket = myServerSocket.accept();
+                System.out.println("is Running Client 1");
                 new ServerHandler(socket);
             }
         } catch (IOException e) {
             try {
-                isRunning= false;
+                isRunning = false;
                 myServerSocket.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -57,7 +55,13 @@ public class Server implements Runnable {
         }
     }
     
-    public static void main(String[] args) {
-        new Server();
+    public void close() {
+        try {
+            ServerHandler.closeSockets();
+            myServerSocket.close();
+            isRunning = false;
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

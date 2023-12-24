@@ -19,6 +19,10 @@ import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
 import java.lang.reflect.Type;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import util.Database;
 
 /**
@@ -27,27 +31,29 @@ import util.Database;
  */
 public class ServerHandler extends Thread {
 
-    public Vector<ServerHandler> playersSocket = new Vector(); //maybe Set
+    private static final Vector<ServerHandler> PLAYERS_SOCKET = new Vector(); //maybe Set
+    public Socket socket;
     public DataInputStream in;
     public PrintStream out;
-    public Socket socket;
     boolean isRunning = true;
 
     Gson gson = new Gson();
     ArrayList requestData;
-
+    
     public ServerHandler(Socket socket) {
 
         try {
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new PrintStream(socket.getOutputStream());
+            PLAYERS_SOCKET.add(this);
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        playersSocket.add(this);
         start();
+        
     }
 
     @Override
@@ -65,6 +71,8 @@ public class ServerHandler extends Thread {
                 in.close();
                 socket.close();
                 isRunning = false;
+
+                PLAYERS_SOCKET.remove(this);
             } catch (IOException ex1) {
                 Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex1);
             }
@@ -110,39 +118,42 @@ public class ServerHandler extends Thread {
                 //TODO updateScore();
                 break;
             case 11:
-                // TODO sendMessage();
+                //getAvailablePlayers();
                 break;
-
+            case Constants.BROADCAST_MESSAGE:
+                sendMessageToAll();
         }
     }
 
     private void register() throws JsonSyntaxException {
         Player newPlayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
-        //Add This New Player To DB
-        boolean isRegisterd = true;
-        //boolean isRegisterd = addToDB(newPlayer);
+        boolean isRegisterd = Database.registerPlayer(newPlayer);
 
-        ArrayList jsonArr = new ArrayList();
-        jsonArr.add(Constants.REGISTER);
-        jsonArr.add(isRegisterd);
+        ArrayList jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.REGISTER);
+        jsonResponse.add(isRegisterd);
 
-        String gsonRequest = gson.toJson(jsonArr);
-        System.out.println("Serialized JSON: " + gsonRequest);
+        String gsonRequest = gson.toJson(jsonResponse);
         out.println(gsonRequest);
     }
 
     private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
+
         int playerId = 2;
         //int playerId= checkInDB(currentPlayer);
 
-        ArrayList<Integer> jsonArr = new ArrayList();
-        jsonArr.add(Constants.LOGIN);
-        jsonArr.add(playerId);
+        int authenticatePlayerId = Database.authenticatePlayer(currentplayer);
 
-        String gsonRequest = gson.toJson(jsonArr);
-        out.println(gsonRequest);
+
+        ArrayList<Integer> jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.LOGIN);
+        jsonResponse.add(authenticatePlayerId);
+
+        String gsonResponse = gson.toJson(jsonResponse);
+        out.println(gsonResponse);
     }
+
 
     private void getAvailablePlayers() {
         ArrayList<Player> players = Database.getAvaliablePlayer();
@@ -172,9 +183,36 @@ public class ServerHandler extends Thread {
         
     }
 
-    
+    private void sendMessageToAll() {
+        double sourceId = (double) requestData.get(1);
+        String broadCastMessage = (String) requestData.get(2);
 
-    private void handleRequest(int  senderId, int receiverId) {
+        String sourcePlayerName = Database.getPlayerName((int) sourceId);
+
+        ArrayList<Object> jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.BROADCAST_MESSAGE);
+        jsonResponse.add(sourcePlayerName);
+        jsonResponse.add(broadCastMessage);
+        String gsonResponse = gson.toJson(jsonResponse);
+
+        System.err.println("aefd");
         
+        PLAYERS_SOCKET.forEach((serverHandler) -> {
+            System.out.println(serverHandler);
+            serverHandler.out.println(gsonResponse);
+        });
+    }
+
+    public static void closeSockets() {
+        try {
+            for (ServerHandler serverHandler : PLAYERS_SOCKET) {
+                serverHandler.in.close();
+                serverHandler.out.close();
+                serverHandler.socket.close();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 }

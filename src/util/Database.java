@@ -48,7 +48,6 @@ public class Database {
         Connection connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-
         try {
             String query = "SELECT id FROM player WHERE email = ? AND password = ?";
             preparedStatement = connection.prepareStatement(query);
@@ -72,16 +71,15 @@ public class Database {
             if (preparedStatement != null) {
                 closeStatement(preparedStatement);
             }
-            closeConnection();
         }
     }
-
+    
     public static boolean registerPlayer(Player player) {
-        Connection connection = getConnection();
+        connection = getConnection();
         PreparedStatement preparedStatement = null;
-
+	int rowsAffected = 0;
         try {
-            String query = "INSERT INTO player (name, email, password, isOnline, ISAVAILABLE) VALUES (?, ?, ?, ?, ?)";
+            String query = "INSERT INTO player (name, email, password, isOnline, isAvailable) VALUES (?, ?, ?, ?, ?)";
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getEmail());
@@ -89,9 +87,8 @@ public class Database {
             preparedStatement.setBoolean(4, true);
             preparedStatement.setBoolean(5, false);
 
-            int rowsAffected = preparedStatement.executeUpdate();
+            rowsAffected = preparedStatement.executeUpdate();
 
-            return rowsAffected > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Player registration failed");
@@ -99,6 +96,7 @@ public class Database {
             closeStatement(preparedStatement);
             closeConnection();
         }
+            return rowsAffected > 0;
     }
 
     public static ArrayList<Player> getAvaliablePlayer() {
@@ -145,10 +143,38 @@ public class Database {
         return players;
     }
 
+    public static String getPlayerName(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            String query = "SELECT name FROM player WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getString("name");
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player name");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    }
+    
+    // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {
         if (connection != null) {
             try {
-                connection.close();
+                if (!connection.isClosed())
+                    connection.close();
                 System.out.println("Connection closed");
             } catch (SQLException e) {
                 e.printStackTrace();
