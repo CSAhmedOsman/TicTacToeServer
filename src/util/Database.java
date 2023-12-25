@@ -139,7 +139,6 @@ public class Database {
                 rowsAffected = 0;
                 System.err.println(exception.getMessage());
             }
-            rowsAffected = preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Player registration Failed");
