@@ -21,20 +21,20 @@ public class Server implements Runnable {
     ServerSocket myServerSocket;
     Thread thread;
     boolean isRunning;
-
     private static Server singletonServer;
     
     {
         isRunning = true;
     }
-
-    private Server() throws IOException {
-        startConnection();
-    }
     
+    private Server() {
+    }
+
     public static Server getServer() throws IOException {
-        if(singletonServer == null)
-            singletonServer= new Server();
+        if (singletonServer == null) {
+            singletonServer = new Server();
+            singletonServer.startConnection();
+        }
         return singletonServer;
     }
 
@@ -61,7 +61,7 @@ public class Server implements Runnable {
             }
         }
     }
-    
+
     public void close() {
         try {
             ServerHandler.closeSockets();
@@ -70,5 +70,16 @@ public class Server implements Runnable {
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public void connect() throws IOException {
+        if (isRunning == false) {
+            startConnection();
+            isRunning = true;
+        }
+    }
+
+    public boolean isRunning() {
+        return isRunning;
     }
 }

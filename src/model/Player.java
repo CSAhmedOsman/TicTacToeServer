@@ -10,6 +10,7 @@ package model;
  * @author w
  */
 public class Player {
+
     private int id;
     private String name;
     private String email;//Maybe Validation On Pass
@@ -19,20 +20,26 @@ public class Player {
     private boolean isPlaying;
 
     {
-        isPlaying= isOnline= false;
-        score= 0;
+        isPlaying = isOnline = false;
+        score = 0;
     }
 
     public Player(String email, String password) {
         this.email = email;
         this.password = password;
     }
-    
+
     public Player(int id, String name, String email, String password) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
+    }
+
+    public Player(String name, int score) {
+
+        this.name = name;
+        this.score = score;
     }
 
     public Player(int id, String name, String email, String password, int score, boolean isOnline) {
@@ -44,10 +51,16 @@ public class Player {
         this.isOnline = isOnline;
     }
 
+    public Player(int id, String name, int score) {
+        this.id = id;
+        this.name = name;
+        this.score = score;
+    }
+
     public int getId() {
         return id;
     }
-    
+
     public String getName() {
         return name;
     }

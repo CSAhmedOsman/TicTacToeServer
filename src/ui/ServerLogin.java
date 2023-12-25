@@ -72,8 +72,9 @@ public class ServerLogin extends AnchorPane {
     private double xOffset = 0;
     private double yOffset = 0;
     Server server;
+    Connection connection;
 
-    public ServerLogin(Stage stage) {
+    public ServerLogin() {
 
         rectangle = new Rectangle();
         label = new Label();
@@ -394,22 +395,19 @@ public class ServerLogin extends AnchorPane {
         textDBname.setDisable(true);
         textServer.setText("5005");
         textServer.setDisable(true);
-        
+
         btnConnect.setOnAction(e -> {
-            connectToServer();
-            connectToDatabase();
-            navigateToNextScene(stage, Database.getConnection());
+            if (connectToServer() && connectToDatabase()) {
+                navigateToNextScene();
+            }
         });
         btnMin.setOnAction(e -> {
+            Stage stage = (Stage) this.getScene().getWindow();
             stage.setIconified(true); // This will minimize the window
         });
         btnClose.setOnAction(e -> {
             Platform.exit();
-            stage.close();
         });
-        
-        textUserName.setText("root");
-        passwordField.setText("root");
     }
 
     private boolean connectToDatabase() {
@@ -417,7 +415,7 @@ public class ServerLogin extends AnchorPane {
         String password = passwordField.getText();
         try {
             DriverManager.registerDriver(new ClientDriver());
-            Connection connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
+            connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
             statusLabel.setText("Connected to database!");
             return true;
         } catch (SQLException e) {
@@ -430,7 +428,7 @@ public class ServerLogin extends AnchorPane {
 
     private boolean connectToServer() {
         try {
-            server = Server.getServer();
+            server = server.getServer();
             return true;
         } catch (IOException e) {
             statusLabel.setTextFill(Color.RED);
@@ -439,16 +437,11 @@ public class ServerLogin extends AnchorPane {
         }
     }
 
-    private void navigateToNextScene(Stage stage, Connection connection) {
-
-        Stage newStage = new Stage();
-        newStage.initStyle(StageStyle.TRANSPARENT);
+    private void navigateToNextScene() {
+        Stage stage = (Stage) this.getScene().getWindow();
         Parent root = new ServerStatus(connection, server);
         Scene scene = new Scene(root);
-        
-        newStage.setScene(scene);
-        newStage.show();
-        stage.close();
-
+        stage.setScene(scene);
+        stage.show();
     }
 }

@@ -23,10 +23,8 @@ public class ServerApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = new ServerLogin(stage);
-         stage.initStyle(StageStyle.TRANSPARENT);
-        Scene scene = new Scene(root);
-         root.setOnMousePressed(event -> {
+        Parent root = new ServerLogin();
+        root.setOnMousePressed(event -> {
             xOffset = event.getSceneX();
             yOffset = event.getSceneY();
         });
@@ -35,6 +33,9 @@ public class ServerApp extends Application {
             stage.setX(event.getScreenX() - xOffset);
             stage.setY(event.getScreenY() - yOffset);
         });
+
+        stage.initStyle(StageStyle.TRANSPARENT);
+        Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
