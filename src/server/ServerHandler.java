@@ -13,15 +13,19 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
 import java.lang.reflect.Type;
 
+import java.util.Vector;
+import model.Message;
+
+
 import java.util.HashSet;
 import java.util.Set;
+
 
 import util.Database;
 
@@ -36,7 +40,7 @@ public class ServerHandler extends Thread {
     public DataInputStream in;
     public PrintStream out;
     boolean isRunning = true;
-
+    int playerId;
     Gson gson = new Gson();
     ArrayList requestData;
 
@@ -71,8 +75,8 @@ public class ServerHandler extends Thread {
                 in.close();
                 socket.close();
                 isRunning = false;
-
                 PLAYERS_SOCKET.remove(this);
+
             } catch (IOException ex1) {
                 Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex1);
             }
@@ -117,8 +121,10 @@ public class ServerHandler extends Thread {
             case 9:
                 //TODO finish();
                 break;
-            case 10:
-                //TODO updateScore();
+
+            case Constants.SENDMESSAGE:
+                sendMessage();
+    
                 break;
             case 11:
                 //getAvailablePlayers();
@@ -143,10 +149,13 @@ public class ServerHandler extends Thread {
    private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
 
-        int playerId = 2;
-        //int playerId= checkInDB(currentPlayer);
 
         int authenticatePlayerId = Database.authenticatePlayer(currentplayer);
+
+
+        if(authenticatePlayerId!= -1)
+            playerId = authenticatePlayerId;
+
 
         ArrayList<Integer> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.LOGIN);
@@ -225,4 +234,33 @@ public class ServerHandler extends Thread {
         }
 
     }
+
+
+    private void sendMessage() {
+        Message message = gson.fromJson(gson.toJson(requestData.get(1)), Message.class);
+
+        ServerHandler destinationSocket = getDestinationSocket(message.getDestinationId());
+        String srcPlayerName = Database.getPlayerName(message.getSourceId());
+
+        ArrayList<Object> jsonArr = new ArrayList();
+        jsonArr.add(Constants.SENDMESSAGE);
+        jsonArr.add(message.getMessage());
+        jsonArr.add(srcPlayerName);
+
+        String gsonRequest = gson.toJson(jsonArr);
+        
+        destinationSocket.out.println(gsonRequest);
+    }
+
+    private ServerHandler getDestinationSocket(int destinationId) {
+        ServerHandler destinationHandler = null;
+        for (ServerHandler currentSocket : PLAYERS_SOCKET) {
+            if (destinationId == currentSocket.playerId) {
+                destinationHandler = currentSocket;
+                break;
+            }
+        }
+        return destinationHandler;
+    }
+
 }

@@ -49,6 +49,9 @@ public class Database {
         Connection connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
+
+        int authenticateId = -1;
+
         try {
             String query = "SELECT id FROM player WHERE email = ? AND password = ?";
             preparedStatement = connection.prepareStatement(query);
@@ -58,9 +61,18 @@ public class Database {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                return resultSet.getInt("id");
-            } else {
-                return -1;
+                authenticateId = resultSet.getInt("id");
+
+                String availableQuery  = "update player set isOnline = ? , isAvailable= ? where id= ?";
+                preparedStatement = connection.prepareStatement(availableQuery);
+                preparedStatement.setBoolean(1, true);
+                preparedStatement.setBoolean(2, true);
+                preparedStatement.setInt(3, authenticateId);
+                int rowsAffected = preparedStatement.executeUpdate();
+                if(rowsAffected <= 0) {
+                    authenticateId= -1;
+                    System.out.println("Is Available Problem");
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -73,6 +85,7 @@ public class Database {
                 closeStatement(preparedStatement);
             }
         }
+        return authenticateId;
     }
 
     public static boolean registerPlayer(Player player) {
@@ -80,22 +93,21 @@ public class Database {
         PreparedStatement preparedStatement = null;
         int rowsAffected = 0;
         try {
-            String query = "INSERT INTO player (name, email, password, isOnline, isAvailable) VALUES (?, ?, ?, ?, ?)";
+            String query = "INSERT INTO player (name, email, password, isOnline, isAvailable, score) VALUES (?, ?, ?, ?, ?, ?)";
             preparedStatement = connection.prepareStatement(query);
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getEmail());
             preparedStatement.setString(3, player.getPassword());
-            preparedStatement.setBoolean(4, true);
+            preparedStatement.setBoolean(4, false);
             preparedStatement.setBoolean(5, false);
+            preparedStatement.setInt(6, 0);
 
             rowsAffected = preparedStatement.executeUpdate();
-
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Player registration failed");
         } finally {
             closeStatement(preparedStatement);
-            closeConnection();
         }
         return rowsAffected > 0;
     }
@@ -170,6 +182,7 @@ public class Database {
         }
     }
 
+
     public static Player getPlayerNameAndScore(int playerId) {
          System.out.println("get data of Player from database");
         connection = getConnection();
@@ -197,6 +210,7 @@ public class Database {
             closeStatement(preparedStatement);
         }
     }
+
 
     // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {

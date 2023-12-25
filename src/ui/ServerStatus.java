@@ -5,19 +5,21 @@
  */
 package ui;
 
+import java.io.IOException;
+import javafx.scene.Scene;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -31,7 +33,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.apache.derby.jdbc.ClientDriver;
 import server.Server;
 
@@ -40,6 +41,7 @@ import server.Server;
  * @author LENOVO
  */
 public class ServerStatus extends AnchorPane {
+
     protected final Rectangle rectangle;
     protected final Label label;
     protected final DropShadow dropShadow;
@@ -47,7 +49,7 @@ public class ServerStatus extends AnchorPane {
     protected final Rectangle rectangle0;
     protected final Rectangle rectangle1;
     protected final Rectangle rectangle2;
-    protected final Rectangle btnLogin;
+    protected final Rectangle rectangle3;
     protected final Circle circle0;
     protected final Button btnClose;
     protected final DropShadow dropShadow0;
@@ -61,22 +63,23 @@ public class ServerStatus extends AnchorPane {
     protected final DropShadow dropShadow4;
     protected final ToggleButton btnStatus;
     protected final DropShadow dropShadow5;
-    protected final Label label1;
-    protected final DropShadow dropShadow6;
+    protected final Label labelError;
     protected final TextField textOPlayer;
     protected final TextField textTotalPlayers;
-    protected final Label label2;
-    protected final DropShadow dropShadow7;
     protected final Button btnLogOut;
-    protected final DropShadow dropShadow8;
-    protected final TextField textAplayer;
-    protected final Label label3;
-    protected final DropShadow dropShadow9;
-    boolean isConnected;
-    Connection Newconnection;
-    Thread th;
+    protected final DropShadow dropShadow6;
+    protected final TextField textAPlayer;
+    protected final CategoryAxis categoryAxis;
+    protected final NumberAxis numberAxis;
+    protected final BarChart<String, Number> barChart;
+    protected boolean isConnected;
+    protected Thread th;
+    protected Connection myConnection;
+    protected Connection newConnection;
+    protected Server myServer;
+    protected boolean isRunning;
 
-    public ServerStatus(Connection connection,Server server) {
+    public ServerStatus(Connection connection, Server server) {
 
         rectangle = new Rectangle();
         label = new Label();
@@ -85,7 +88,7 @@ public class ServerStatus extends AnchorPane {
         rectangle0 = new Rectangle();
         rectangle1 = new Rectangle();
         rectangle2 = new Rectangle();
-        btnLogin = new Rectangle();
+        rectangle3 = new Rectangle();
         circle0 = new Circle();
         btnClose = new Button();
         dropShadow0 = new DropShadow();
@@ -99,17 +102,15 @@ public class ServerStatus extends AnchorPane {
         dropShadow4 = new DropShadow();
         btnStatus = new ToggleButton();
         dropShadow5 = new DropShadow();
-        label1 = new Label();
+        labelError = new Label();
         dropShadow6 = new DropShadow();
-        textOPlayer = new TextField();
         textTotalPlayers = new TextField();
-        label2 = new Label();
-        dropShadow7 = new DropShadow();
+        textOPlayer = new TextField();
+        textAPlayer = new TextField();
         btnLogOut = new Button();
-        dropShadow8 = new DropShadow();
-        textAplayer = new TextField();
-        label3 = new Label();
-        dropShadow9 = new DropShadow();
+        categoryAxis = new CategoryAxis();
+        numberAxis = new NumberAxis();
+        barChart = new BarChart<>(categoryAxis, numberAxis);
 
         setMaxHeight(USE_PREF_SIZE);
         setMaxWidth(USE_PREF_SIZE);
@@ -121,13 +122,11 @@ public class ServerStatus extends AnchorPane {
         rectangle.setArcHeight(5.0);
         rectangle.setArcWidth(5.0);
         rectangle.setFill(javafx.scene.paint.Color.valueOf("#ffbdbd"));
-        rectangle.setHeight(607.0);
-        rectangle.setLayoutX(-8.0);
-        rectangle.setLayoutY(-3.0);
+        rectangle.setHeight(600.0);
+        rectangle.setWidth(700.0);
         rectangle.setSmooth(false);
         rectangle.setStroke(javafx.scene.paint.Color.BLACK);
         rectangle.setStrokeType(javafx.scene.shape.StrokeType.INSIDE);
-        rectangle.setWidth(708.0);
 
         label.setLayoutX(85.0);
         label.setLayoutY(72.0);
@@ -148,6 +147,14 @@ public class ServerStatus extends AnchorPane {
         circle.setRadius(111.0);
         circle.setStroke(javafx.scene.paint.Color.valueOf("#d0cbcb"));
         circle.setStrokeType(javafx.scene.shape.StrokeType.INSIDE);
+
+        circle0.setFill(javafx.scene.paint.Color.valueOf("#00000078"));
+        circle0.setLayoutX(662.0);
+        circle0.setLayoutY(548.0);
+        circle0.setOpacity(0.2);
+        circle0.setRadius(71.0);
+        circle0.setStroke(javafx.scene.paint.Color.valueOf("#d0cbcb"));
+        circle0.setStrokeType(javafx.scene.shape.StrokeType.INSIDE);
 
         rectangle0.setArcHeight(5.0);
         rectangle0.setArcWidth(5.0);
@@ -185,25 +192,17 @@ public class ServerStatus extends AnchorPane {
         rectangle2.setStrokeType(javafx.scene.shape.StrokeType.INSIDE);
         rectangle2.setWidth(29.0);
 
-        btnLogin.setArcHeight(5.0);
-        btnLogin.setArcWidth(5.0);
-        btnLogin.setFill(javafx.scene.paint.Color.valueOf("#141414"));
-        btnLogin.setHeight(188.0);
-        btnLogin.setLayoutX(626.0);
-        btnLogin.setLayoutY(169.0);
-        btnLogin.setOpacity(0.2);
-        btnLogin.setRotate(-138.0);
-        btnLogin.setStroke(javafx.scene.paint.Color.BLACK);
-        btnLogin.setStrokeType(javafx.scene.shape.StrokeType.INSIDE);
-        btnLogin.setWidth(29.0);
-
-        circle0.setFill(javafx.scene.paint.Color.valueOf("#00000078"));
-        circle0.setLayoutX(662.0);
-        circle0.setLayoutY(548.0);
-        circle0.setOpacity(0.2);
-        circle0.setRadius(71.0);
-        circle0.setStroke(javafx.scene.paint.Color.valueOf("#d0cbcb"));
-        circle0.setStrokeType(javafx.scene.shape.StrokeType.INSIDE);
+        rectangle3.setArcHeight(5.0);
+        rectangle3.setArcWidth(5.0);
+        rectangle3.setFill(javafx.scene.paint.Color.valueOf("#141414"));
+        rectangle3.setHeight(188.0);
+        rectangle3.setLayoutX(626.0);
+        rectangle3.setLayoutY(169.0);
+        rectangle3.setOpacity(0.2);
+        rectangle3.setRotate(-138.0);
+        rectangle3.setStroke(javafx.scene.paint.Color.BLACK);
+        rectangle3.setStrokeType(javafx.scene.shape.StrokeType.INSIDE);
+        rectangle3.setWidth(29.0);
 
         btnClose.setLayoutX(616.0);
         btnClose.setLayoutY(23.0);
@@ -241,11 +240,11 @@ public class ServerStatus extends AnchorPane {
         dropShadow1.setSpread(0.69);
         btnMin.setEffect(dropShadow1);
 
-        btnRefresh.setLayoutX(307.0);
-        btnRefresh.setLayoutY(486.0);
+        btnRefresh.setLayoutX(80.0);
+        btnRefresh.setLayoutY(430.0);
         btnRefresh.setMnemonicParsing(false);
-        btnRefresh.setPrefHeight(63.0);
-        btnRefresh.setPrefWidth(121.0);
+        btnRefresh.setPrefHeight(50.0);
+        btnRefresh.setPrefWidth(120.0);
         btnRefresh.setStyle("-fx-background-radius: 100; -fx-background-color: #EAD3D7;");
         btnRefresh.setText("Refresh");
         btnRefresh.setTextFill(javafx.scene.paint.Color.valueOf("#43115b"));
@@ -257,13 +256,13 @@ public class ServerStatus extends AnchorPane {
         dropShadow2.setWidth(35.83);
         btnRefresh.setEffect(dropShadow2);
 
-        btnSwitch.setLayoutX(473.0);
-        btnSwitch.setLayoutY(219.0);
+        btnSwitch.setLayoutX(475.0);
+        btnSwitch.setLayoutY(180.0);
         btnSwitch.setMnemonicParsing(false);
-        btnSwitch.setPrefHeight(45.0);
-        btnSwitch.setPrefWidth(99.0);
+        btnSwitch.setPrefHeight(50.0);
+        btnSwitch.setPrefWidth(100.0);
+        btnSwitch.setText("On");
         btnSwitch.setStyle("-fx-background-radius: 50;");
-        btnSwitch.setText("OFF");
         btnSwitch.setTextFill(javafx.scene.paint.Color.valueOf("#43115b"));
         btnSwitch.setCursor(Cursor.HAND);
         btnSwitch.setFont(new Font("Gill Sans Ultra Bold Condensed", 23.0));
@@ -271,107 +270,98 @@ public class ServerStatus extends AnchorPane {
         dropShadow3.setSpread(0.33);
         btnSwitch.setEffect(dropShadow3);
 
-        label0.setLayoutX(43.0);
-        label0.setLayoutY(231.0);
+        btnStatus.setLayoutX(285.0);
+        btnStatus.setLayoutY(180.0);
+        btnStatus.setMnemonicParsing(false);
+        btnStatus.setPrefHeight(50.0);
+        btnStatus.setPrefWidth(170.0);
+        btnStatus.setText("Disconnected");
+        btnStatus.setStyle("-fx-background-color: #ff0000; -fx-background-radius: 30;");
+        btnStatus.setFont(new Font("Franklin Gothic Heavy", 20.0));
+
+        btnStatus.setEffect(dropShadow3);
+
+        label0.setLayoutX(80.0);
+        label0.setLayoutY(195.0);
         label0.setText("Server Stauts");
         label0.setFont(new Font("Franklin Gothic Medium", 21.0));
 
         dropShadow4.setColor(javafx.scene.paint.Color.WHITE);
-        dropShadow4.setHeight(10.385);
-        dropShadow4.setRadius(4.32125);
         dropShadow4.setSpread(0.83);
-        dropShadow4.setWidth(8.9);
         label0.setEffect(dropShadow4);
 
-        btnStatus.setLayoutX(286.0);
-        btnStatus.setLayoutY(220.0);
-        btnStatus.setMnemonicParsing(false);
-        btnStatus.setPrefHeight(45.0);
-        btnStatus.setPrefWidth(163.0);
-        btnStatus.setStyle("-fx-background-color: #3bd035; -fx-background-radius: 30;");
-        btnStatus.setText("Connected");
-        btnStatus.setFont(new Font("Franklin Gothic Heavy", 20.0));
+        labelError.setLayoutX(285.0);
+        labelError.setLayoutY(245.0);
+        labelError.setPrefHeight(17.0);
+        labelError.setPrefWidth(305.0);
+        labelError.setText("");
 
-        btnStatus.setEffect(dropShadow5);
+        dropShadow5.setColor(javafx.scene.paint.Color.RED);
+        dropShadow5.setSpread(0.98);
+        labelError.setEffect(dropShadow5);
 
-        label1.setLayoutX(43.0);
-        label1.setLayoutY(297.0);
-        label1.setPrefHeight(26.0);
-        label1.setPrefWidth(319.0);
-        label1.setText("Total number of players");
-        label1.setTextOverrun(javafx.scene.control.OverrunStyle.CLIP);
-        label1.setFont(new Font("Franklin Gothic Medium", 21.0));
-
-        dropShadow6.setColor(javafx.scene.paint.Color.WHITE);
-        dropShadow6.setHeight(11.87);
-        dropShadow6.setRadius(4.6925);
-        dropShadow6.setSpread(0.83);
-        dropShadow6.setWidth(8.9);
-        label1.setEffect(dropShadow6);
-
-        textOPlayer.setEditable(false);
-        textOPlayer.setLayoutX(323.0);
-        textOPlayer.setLayoutY(347.0);
-        textOPlayer.setPrefHeight(39.0);
-        textOPlayer.setPrefWidth(88.0);
-        textOPlayer.setStyle("-fx-background-radius: 50; -fx-alignment: center;");
-        textOPlayer.setFont(new Font("System Bold", 18.0));
-
+        textTotalPlayers.setDisable(true);
         textTotalPlayers.setEditable(false);
-        textTotalPlayers.setLayoutX(322.0);
-        textTotalPlayers.setLayoutY(290.0);
-        textTotalPlayers.setPrefHeight(39.0);
-        textTotalPlayers.setPrefWidth(88.0);
+        textTotalPlayers.setLayoutX(285.0);
+        textTotalPlayers.setLayoutY(280.0);
+        textTotalPlayers.setPrefHeight(40.0);
+        textTotalPlayers.setPrefWidth(90.0);
         textTotalPlayers.setStyle("-fx-background-radius: 50; -fx-alignment: center;");
         textTotalPlayers.setFont(new Font("System Bold", 18.0));
 
-        label2.setLayoutX(46.0);
-        label2.setLayoutY(354.0);
-        label2.setText("Number of online players");
-        label2.setFont(new Font("Franklin Gothic Medium", 21.0));
+        textOPlayer.setDisable(true);
+        textOPlayer.setEditable(false);
+        textOPlayer.setLayoutX(405.0);
+        textOPlayer.setLayoutY(280.0);
+        textOPlayer.setPrefHeight(40.0);
+        textOPlayer.setPrefWidth(90.0);
+        textOPlayer.setStyle("-fx-background-radius: 50; -fx-alignment: center;");
+        textOPlayer.setFont(new Font("System Bold", 18.0));
 
-        dropShadow7.setColor(javafx.scene.paint.Color.WHITE);
-        dropShadow7.setHeight(11.87);
-        dropShadow7.setRadius(4.6925);
-        dropShadow7.setSpread(0.83);
-        dropShadow7.setWidth(8.9);
-        label2.setEffect(dropShadow7);
+        textAPlayer.setDisable(true);
+        textAPlayer.setEditable(false);
+        textAPlayer.setLayoutX(525.0);
+        textAPlayer.setLayoutY(280.0);
+        textAPlayer.setPrefHeight(40.0);
+        textAPlayer.setPrefWidth(90.0);
+        textAPlayer.setStyle("-fx-background-radius: 50; -fx-alignment: center;");
+        textAPlayer.setFont(new Font("System Bold", 18.0));
 
-        btnLogOut.setLayoutX(56.0);
-        btnLogOut.setLayoutY(486.0);
+        btnLogOut.setLayoutX(80.0);
+        btnLogOut.setLayoutY(510.0);
         btnLogOut.setMnemonicParsing(false);
-        btnLogOut.setPrefHeight(63.0);
-        btnLogOut.setPrefWidth(133.0);
+        btnLogOut.setPrefHeight(50.0);
+        btnLogOut.setPrefWidth(120.0);
         btnLogOut.setStyle("-fx-background-radius: 100; -fx-background-color: #EAD3D7;");
         btnLogOut.setText("Log Out");
         btnLogOut.setTextFill(javafx.scene.paint.Color.valueOf("#43115b"));
         btnLogOut.setFont(new Font("Gill Sans Ultra Bold Condensed", 22.0));
         btnLogOut.setCursor(Cursor.HAND);
 
-        dropShadow8.setHeight(35.83);
-        dropShadow8.setRadius(17.415);
-        dropShadow8.setWidth(35.83);
-        btnLogOut.setEffect(dropShadow8);
+        dropShadow6.setHeight(35.83);
+        dropShadow6.setRadius(17.415);
+        dropShadow6.setWidth(35.83);
+        btnLogOut.setEffect(dropShadow6);
 
-        textAplayer.setEditable(false);
-        textAplayer.setLayoutX(322.0);
-        textAplayer.setLayoutY(405.0);
-        textAplayer.setPrefHeight(39.0);
-        textAplayer.setPrefWidth(88.0);
-        textAplayer.setStyle("-fx-background-radius: 50; -fx-alignment: center;");
-        textAplayer.setFont(new Font("System Bold", 18.0));
+        categoryAxis.setLabel("User's Type");
+        numberAxis.setLabel("Number of Users");
 
-        label3.setLayoutX(43.0);
-        label3.setLayoutY(412.0);
-        label3.setText("Number of available players");
-        label3.setFont(new Font("Franklin Gothic Medium", 21.0));
+        XYChart.Series<String, Number> regesteredUsersSeries = new XYChart.Series<>();
+        regesteredUsersSeries.setName("Regestered Users");
+        XYChart.Series<String, Number> onlineUsersSeries = new XYChart.Series<>();
+        onlineUsersSeries.setName("Online Users");
+        XYChart.Series<String, Number> playingUsersSeries = new XYChart.Series<>();
+        playingUsersSeries.setName("Playing Users");
 
-        dropShadow9.setColor(javafx.scene.paint.Color.WHITE);
-        dropShadow9.setHeight(11.87);
-        dropShadow9.setRadius(4.6925);
-        dropShadow9.setSpread(0.83);
-        dropShadow9.setWidth(8.9);
-        label3.setEffect(dropShadow9);
+        regesteredUsersSeries.getData().add(new XYChart.Data<>("Regestered", 0/*put num of users*/));
+        onlineUsersSeries.getData().add(new XYChart.Data<>("Online", 0/*put num of users*/));
+        playingUsersSeries.getData().add(new XYChart.Data<>("Playing", 0/*put num of users*/));
+        barChart.getData().addAll(regesteredUsersSeries, onlineUsersSeries, playingUsersSeries);
+
+        barChart.setLayoutX(225.0);
+        barChart.setLayoutY(322.0);
+        barChart.setPrefHeight(266.0);
+        barChart.setPrefWidth(448.0);
 
         getChildren().add(rectangle);
         getChildren().add(label);
@@ -379,7 +369,7 @@ public class ServerStatus extends AnchorPane {
         getChildren().add(rectangle0);
         getChildren().add(rectangle1);
         getChildren().add(rectangle2);
-        getChildren().add(btnLogin);
+        getChildren().add(rectangle3);
         getChildren().add(circle0);
         getChildren().add(btnClose);
         getChildren().add(btnMin);
@@ -387,230 +377,247 @@ public class ServerStatus extends AnchorPane {
         getChildren().add(btnSwitch);
         getChildren().add(label0);
         getChildren().add(btnStatus);
-        getChildren().add(label1);
+        getChildren().add(labelError);
         getChildren().add(textOPlayer);
         getChildren().add(textTotalPlayers);
-        getChildren().add(label2);
         getChildren().add(btnLogOut);
-        getChildren().add(textAplayer);
-        getChildren().add(label3);
-        
-        btnSwitch.setText("Off");
-        btnMin.setOnAction(e -> {
-            Stage stage = (Stage) btnMin.getScene().getWindow();
-            stage.setIconified(true); // This will minimize the window
-        });
-        btnClose.setOnAction(e -> {
-            Stage stage = (Stage) btnClose.getScene().getWindow();
-            try {
-                if (!connection.isClosed()) {
-                    connection.close();
-                    server.close();
+        getChildren().add(textAPlayer);
+        getChildren().add(barChart);
+
+        //-----------------ahmed + abdelrahman Works--------------------
+        isRunning = true;
+        isConnected = false;
+        myServer = server;
+        myConnection = connection;
+        newConnection = myConnection;
+
+        try {
+            if ((connection != null) && (server != null)) {
+                if ((server.isRunning()) && (!connection.isClosed())) {
+                    isConnected = true;
+                    btnSwitch.setText("Off");
+                    btnStatus.setStyle("-fx-background-color: #3bd035; -fx-background-radius: 30;");
+                    btnStatus.setText("Connected");
                 }
-            } catch (SQLException ex) {
-                Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Platform.exit();
-            th.stop();
-            stage.close();
-        });
-        isConnected = true;
-        Newconnection = connection;
-        btnSwitch.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                Newconnection = switchConnection(connection);
-            }
-        });
+        } catch (SQLException ex) {
+            Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Error!", "Error while Getting Server Status.\n" + ex.getMessage()));
+        }
+
+        addListener();
+
         th = new Thread(() -> {
-            while (true) {
+            while (isRunning) {
                 try {
                     Platform.runLater(() -> {
-                        displayAvailableplayers(Newconnection);
-                        displayOnlineplayers(Newconnection);
-                        displayTotalplayers(Newconnection);
+                        if (isConnected) {
+                            updateChartData(getTotalPlayers(newConnection),
+                                    getOnlinePlayers(newConnection),
+                                    getNotAvailableplayers(newConnection));
+                        }
                     });
                     Thread.sleep(6000); // Sleep for 6 seconds (for demonstration)
                 } catch (InterruptedException ex) {
-                    Platform.runLater(() -> showAlert("Server is Disconnected!", "The connection to SQL Server has been closed."));
-                    Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
+                    Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconnected!", "The connection to SQL Server has been closed.\n" + ex.getMessage()));
                 }
             }
         });
         th.start(); // Start the thread
+    }
+
+    private void addListener() {
+
+        btnMin.setOnAction(e -> {
+            Stage stage = (Stage) btnMin.getScene().getWindow();
+            stage.setIconified(true); // This will minimize the window
+        });
+
+        btnClose.setOnAction(e -> {
+            try {
+                isRunning = false;
+                if (newConnection != null) {
+                    if (!newConnection.isClosed()) {
+                        newConnection.close();
+                    }
+                }
+                if (myServer != null) {
+                    if (myServer.isRunning()) {
+                        myServer.close();
+                    }
+                }
+            } catch (SQLException ex) {
+                Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Close Error!", "Error while Closing.\n" + ex.getMessage()));
+            }
+            th.stop();
+            Platform.exit();
+        });
+
+        btnSwitch.setOnAction((ActionEvent e) -> {
+            newConnection = switchConnection(myConnection);
+            updateChartData(0, 0, 0);
+        });
+
+        btnLogOut.setOnAction((event) -> {
+            try {
+                isRunning = false;
+                disconnectFromSQL(myConnection);
+                myServer.close();
+                th.stop();
+                navigateToNextScene();
+            } catch (SQLException ex) {
+                Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Logout Error!", "Error while Logout.\n" + ex.getMessage()));
+            }
+        });
 
         btnRefresh.setOnAction((event) -> {
-                if (Newconnection!=null) {
-                    displayAvailableplayers(Newconnection);
-                    displayOnlineplayers(Newconnection);
-                    displayTotalplayers(Newconnection);
-                } else {
-                    showAlert("Server is Disconected!", "The connection to SQL Server has been closed.");
-                }
-         
             btnRefresh.setDisable(true); // Disable the button when clicked
+            if (newConnection != null && isConnected) {
+                updateChartData(getTotalPlayers(newConnection),
+                        getOnlinePlayers(newConnection),
+                        getNotAvailableplayers(newConnection));
+            } else {
+                util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.");
+            }
             new Thread(() -> {
                 try {
                     Thread.sleep(10000); // Sleep for 10 seconds
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                    Thread.currentThread().interrupt();
+                    Thread.currentThread().stop();
                 }
                 // After 30 seconds, enable the button on the JavaFX Application Thread
                 Platform.runLater(() -> btnRefresh.setDisable(false));
             }).start();
         });
-        btnLogOut.setOnAction((event) -> {
-                    disconnectFromSQL(connection);
-                    th.stop();
-                    Stage stage = (Stage) btnLogOut.getScene().getWindow();
-                    navigateToNextScene(stage);
-                
-                });
-        }
-    
+    }
+
     private Connection switchConnection(Connection connection) {
         if (isConnected) {
-            th.suspend();
-            disconnectFromSQL(connection);
+            try {
+                th.suspend();
+                myServer.close();
+                disconnectFromSQL(connection);
+                labelError.setText("");
+            } catch (SQLException ex) {
+                labelError.setText("Error while disconnecting DataBase: " + ex.getMessage());
+            }
         } else {
             try {
                 connection = connectToSQL();
+                myServer.connect();
                 th.resume();
+                labelError.setText("");
                 return connection;
-            } catch (ClassNotFoundException e) {
-                showAlert("Server is Disconected!", "The connection to SQL Server has been closed.");
-                e.printStackTrace(); // Proper error handling needed here
+            } catch (IOException ex) {
+                labelError.setText("Error while Connecting Server: " + ex.getMessage());
+            } catch (SQLException ex) {
+                labelError.setText("Error while Connecting Database: " + ex.getMessage());
             }
         }
         return null;
     }
 
-    private void disconnectFromSQL(Connection connection) {
+    private void disconnectFromSQL(Connection connection) throws SQLException {
         if (connection != null) {
-            try {
-                connection.close();
-                isConnected = false;
-                btnSwitch.setText("On");
-                btnStatus.setStyle("-fx-background-color: #ff0000");
-                btnStatus.setText("Disconnected");
-                System.out.println("Disconnected from DataBase Server.");
-            
-            } catch (SQLException e) {
-                System.out.println("Error while disconnecting: " + e.getMessage());
-            }
-        }
-       
-    }
-
-    private Connection connectToSQL() throws ClassNotFoundException {
-        String server = "DESKTOP-C2J9487:1433";
-        String database = "gameDB";
-        String username = "abdelrhman";
-        String password = "root";
-        Connection connection = null;
-        try {
-            DriverManager.registerDriver(new ClientDriver());
-             connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", "root", "root");
-          
-            isConnected = true;
-            btnSwitch.setText("Off");
-            btnStatus.setStyle("-fx-background-color: #3bd035");
-            btnStatus.setText("Connected");
-            System.out.println("Connected to DataBase.");
-        } catch (SQLException e) {
+            connection.close();
             isConnected = false;
             btnSwitch.setText("On");
-            System.out.println("Connection failed. Error: " + e.getMessage());
+            btnStatus.setStyle("-fx-background-color: #ff0000; -fx-background-radius: 30;");
+            btnStatus.setText("Disconnected");
+            labelError.setText("");
         }
+    }
+
+    private Connection connectToSQL() throws SQLException {
+        Connection connection = null;
+        DriverManager.registerDriver(new ClientDriver());
+        connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", "root", "root");
+        isConnected = true;
+        btnSwitch.setText("Off");
+        btnStatus.setStyle("-fx-background-color: #3bd035; -fx-background-radius: 30;");
+        btnStatus.setText("Connected");
+        labelError.setText("");
         return connection;
     }
 
-    private void displayTotalplayers(Connection connection) {
+    private int getTotalPlayers(Connection connection) {
+        int playerCount = 0;
         try {
             String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player";
 
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(countPlayersQuery);
 
-            int playerCount = 0;
             if (resultSet.next()) {
                 playerCount = resultSet.getInt("total_players");
             }
-            textTotalPlayers.setText(String.valueOf(playerCount));
 
             resultSet.close();
             statement.close();
-            System.out.println("Connected to TicTacToeDB.");
         } catch (SQLException ex) {
-            showAlert("Server is Disconected!", "The connection to SQL Server has been closed.");
-            Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
+            util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
         }
+        return playerCount;
     }
 
-    private void displayOnlineplayers(Connection connection) {
+    private int getOnlinePlayers(Connection connection) {
+        int playerCount = 0;
         try {
-            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isAvailable = false";
+            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isOnline = true";
 
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(countPlayersQuery);
 
-            int playerCount = 0;
             if (resultSet.next()) {
                 playerCount = resultSet.getInt("total_players");
             }
-            textOPlayer.setText(String.valueOf(playerCount));
 
             resultSet.close();
             statement.close();
-            System.out.println("Connected to TicTacToeDB.");
         } catch (SQLException ex) {
-            showAlert("Server is Disconected!", "The connection to SQL Server has been closed.");
-            Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
+            util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
         }
+        return playerCount;
     }
 
-    private void displayAvailableplayers(Connection connection) {
+    private int getNotAvailableplayers(Connection connection) {
+        int playerCount = 0;
         try {
-            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isAvailable = true";
-            // Create statement and execute query
+            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isOnline = true and isAvailable = false";
+
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(countPlayersQuery);
 
-            // Get the player count from the result set
-            int playerCount = 0;
             if (resultSet.next()) {
                 playerCount = resultSet.getInt("total_players");
             }
-            // Display the player count in the status label
-            textAplayer.setText(String.valueOf(playerCount));
 
-            // Close the result set, statement, and connection
             resultSet.close();
             statement.close();
-
         } catch (SQLException ex) {
-            showAlert("Server is Disconected!", "The connection to SQL Server has been closed.");
-            Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
+            util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
         }
+        return playerCount;
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-    private void navigateToNextScene(Stage stage) {
-        Stage newStage = new Stage();
-        newStage.initStyle(StageStyle.TRANSPARENT);
-        Parent root = new ServerLogin(stage);
+    private void navigateToNextScene() {
+        Stage stage = (Stage) this.getScene().getWindow();
+        Parent root = new ServerLogin();
         Scene scene = new Scene(root);
-        newStage.setScene(scene);
-        newStage.show();
-        
-        stage.close();
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    public void updateChartData(int regesteredUsers, int onlineUsers, int playingUsers) {
+        XYChart.Series<String, Number> regesteredUsersSeries = barChart.getData().get(0);
+        XYChart.Series<String, Number> onlineUsersSeries = barChart.getData().get(1);
+        XYChart.Series<String, Number> playingUsersSeries = barChart.getData().get(2);
+
+        regesteredUsersSeries.getData().get(0).setYValue(regesteredUsers);
+        textTotalPlayers.setText(String.valueOf(regesteredUsers));
+        onlineUsersSeries.getData().get(0).setYValue(onlineUsers);
+        textOPlayer.setText(String.valueOf(onlineUsers));
+        playingUsersSeries.getData().get(0).setYValue(playingUsers);
+        textAPlayer.setText(String.valueOf(playingUsers));
     }
 }
