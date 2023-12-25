@@ -24,4 +24,6 @@ public class Constants {
     
     public static final int BLOCK_PLAYER = 15;
     public static final int UN_BLOCK_PLAYER= 16;
+    
+    public static final int PLAYER_ONLINE= 17;
 }

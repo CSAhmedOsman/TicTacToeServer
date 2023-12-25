@@ -138,6 +138,8 @@ public class ServerHandler extends Thread {
             case Constants.UN_BLOCK_PLAYER:
                 unBlockPlayer();
                 break;
+            case Constants.PLAYER_ONLINE:
+                makePlayerOnline();
         }
     }
 
@@ -153,26 +155,31 @@ public class ServerHandler extends Thread {
         out.println(gsonRequest);
     }
 
-   private void login() throws JsonSyntaxException {
+    /**
+     * Return
+     * Positive => Found And Not Online
+     * Negative -1 => Not Found
+     * Else => Found But Online
+     * 
+     * @throws JsonSyntaxException 
+     */
+    private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
 
-
         int authenticatePlayerId = Database.authenticatePlayer(currentplayer);
-
-
-        if(authenticatePlayerId!= -1)
+        
+        if (authenticatePlayerId!= -1)
             playerId = authenticatePlayerId;
-
-
+        
+        // Constants Better Than Java Doc
+        if (Database.isOnline(authenticatePlayerId))
+            authenticatePlayerId = -2;
+        
         ArrayList<Integer> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.LOGIN);
         jsonResponse.add(authenticatePlayerId);
-        
-        
-
         String gsonResponse = gson.toJson(jsonResponse);
         out.println(gsonResponse);
-        
     }
 
    
@@ -297,10 +304,10 @@ public class ServerHandler extends Thread {
 
     private void blockPlayer() {
         double playerId = (double) requestData.get(1);
-        double friendId = (double) requestData.get(2);
+        double blockedId = (double) requestData.get(2);
 
         removeFriend();
-        boolean isBlocked = Database.blockPlayer((int) playerId, (int) friendId);
+        boolean isBlocked = Database.blockPlayer((int) playerId, (int) blockedId);
         ArrayList jsonResponse = new ArrayList();
         jsonResponse.add(Constants.BLOCK_PLAYER);
         jsonResponse.add(isBlocked);
@@ -311,14 +318,20 @@ public class ServerHandler extends Thread {
 
     private void unBlockPlayer() {
         double playerId = (double) requestData.get(1);
-        double friendId = (double) requestData.get(2);
+        double blockedId = (double) requestData.get(2);
 
-        boolean isUnBlocked = Database.unBlockPlayer((int) playerId, (int) friendId);
+        boolean isUnBlocked = Database.unBlockPlayer((int) playerId, (int) blockedId);
         ArrayList jsonResponse = new ArrayList();
         jsonResponse.add(Constants.UN_BLOCK_PLAYER);
         jsonResponse.add(isUnBlocked);
 
         String gsonRequest = gson.toJson(jsonResponse);
         out.println(gsonRequest);
+    }
+    
+    private void makePlayerOnline() {
+        double playerId = (double) requestData.get(1);
+        
+        Database.makePlayerOnline((int)playerId);
     }
 }
