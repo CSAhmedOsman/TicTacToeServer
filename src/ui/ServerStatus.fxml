@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="AnchorID" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#ffbdbd" height="607.0" layoutX="-8.0" layoutY="-3.0" smooth="false" stroke="BLACK" strokeType="INSIDE" width="708.0" />
+      <Label layoutX="85.0" layoutY="72.0" prefHeight="112.0" prefWidth="615.0" text="Tic-Tac-Toe Server Status" textFill="#43115b">
+         <font>
+            <Font name="Franklin Gothic Demi Cond" size="60.0" />
+         </font>
+         <effect>
+            <DropShadow color="WHITE" spread="0.98" />
+         </effect>
+      </Label>
+      <Circle fill="#00000078" layoutX="48.0" layoutY="72.0" opacity="0.2" radius="111.0" stroke="#d0cbcb" strokeType="INSIDE" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#141414" height="188.0" layoutX="66.0" layoutY="492.0" opacity="0.2" rotate="-35.5" stroke="BLACK" strokeType="INSIDE" width="29.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#141414" height="188.0" layoutX="66.0" layoutY="492.0" opacity="0.2" rotate="-126.9" stroke="BLACK" strokeType="INSIDE" width="29.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#141414" height="188.0" layoutX="626.0" layoutY="169.0" opacity="0.2" rotate="-50.2" stroke="BLACK" strokeType="INSIDE" width="29.0" />
+      <Rectangle fx:id="btnLogin" arcHeight="5.0" arcWidth="5.0" fill="#141414" height="188.0" layoutX="626.0" layoutY="169.0" opacity="0.2" rotate="-138.0" stroke="BLACK" strokeType="INSIDE" width="29.0" />
+      <Circle fill="#00000078" layoutX="662.0" layoutY="548.0" opacity="0.2" radius="71.0" stroke="#d0cbcb" strokeType="INSIDE" />
+      <Button fx:id="btnClose" layoutX="616.0" layoutY="23.0" minHeight="-Infinity" minWidth="50.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="20.0" style="-fx-background-radius: 10; -fx-font-size: 20; -fx-font-weight: bold; -fx-background-color: #FD6D84;" text="X" textFill="WHITE">
+         <font>
+            <Font name="Franklin Gothic Demi Cond" size="43.0" />
+         </font>
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+         <effect>
+            <DropShadow color="#fff7f7" spread="0.69" />
+         </effect>
+      </Button>
+      <Button fx:id="btnMin" layoutX="547.0" layoutY="23.0" minHeight="-Infinity" minWidth="50.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="20.0" style="-fx-background-radius: 10; -fx-font-size: 20; -fx-font-weight: bold; -fx-background-color: #FD6D84;" text="-" textAlignment="JUSTIFY" textFill="WHITE" textOverrun="CLIP">
+         <font>
+            <Font name="Franklin Gothic Demi Cond" size="43.0" />
+         </font>
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+         <effect>
+            <DropShadow color="#fff7f7" spread="0.69" />
+         </effect>
+      </Button>
+      <Button fx:id="btnRefresh" layoutX="307.0" layoutY="486.0" mnemonicParsing="false" prefHeight="63.0" prefWidth="121.0" style="-fx-background-radius: 100; -fx-background-color: #EAD3D7;" text="Refresh" textFill="#43115b">
+         <font>
+            <Font name="Gill Sans Ultra Bold Condensed" size="22.0" />
+         </font>
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+         <effect>
+            <DropShadow height="35.83" radius="17.415" width="35.83" />
+         </effect>
+      </Button>
+      <ToggleButton fx:id="btnSwitch" layoutX="473.0" layoutY="219.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="99.0" style="-fx-background-radius: 50;" text="OFF" textFill="#43115b">
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+         <font>
+            <Font name="Gill Sans Ultra Bold Condensed" size="23.0" />
+         </font>
+         <effect>
+            <DropShadow spread="0.33" />
+         </effect>
+      </ToggleButton>
+      <Label layoutX="43.0" layoutY="231.0" text="Server Stauts">
+         <font>
+            <Font name="Franklin Gothic Medium" size="21.0" />
+         </font>
+         <effect>
+            <DropShadow color="WHITE" height="10.385" radius="4.32125" spread="0.83" width="8.9" />
+         </effect>
+      </Label>
+      <ToggleButton fx:id="btnStatus" layoutX="286.0" layoutY="220.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="163.0" style="-fx-background-color: #3bd035; -fx-background-radius: 30;" text="Connected">
+         <font>
+            <Font name="Franklin Gothic Heavy" size="20.0" />
+         </font>
+         <effect>
+            <DropShadow />
+         </effect>
+      </ToggleButton>
+      <Label layoutX="43.0" layoutY="297.0" prefHeight="26.0" prefWidth="319.0" text="Total number of players" textOverrun="CLIP">
+         <font>
+            <Font name="Franklin Gothic Medium" size="21.0" />
+         </font>
+         <effect>
+            <DropShadow color="WHITE" height="11.87" radius="4.6925" spread="0.83" width="8.9" />
+         </effect>
+      </Label>
+      <TextField fx:id="textOPlayer" editable="false" layoutX="323.0" layoutY="347.0" prefHeight="39.0" prefWidth="88.0" style="-fx-background-radius: 50; -fx-alignment: center;">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </TextField>
+      <TextField fx:id="textTotalPlayers" editable="false" layoutX="322.0" layoutY="290.0" prefHeight="39.0" prefWidth="88.0" style="-fx-background-radius: 50; -fx-alignment: center;">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </TextField>
+      <Label layoutX="46.0" layoutY="354.0" text="Number of online players">
+         <font>
+            <Font name="Franklin Gothic Medium" size="21.0" />
+         </font>
+         <effect>
+            <DropShadow color="WHITE" height="11.87" radius="4.6925" spread="0.83" width="8.9" />
+         </effect>
+      </Label>
+      <Button fx:id="btnLogOut" layoutX="56.0" layoutY="486.0" mnemonicParsing="false" prefHeight="63.0" prefWidth="133.0" style="-fx-background-radius: 100; -fx-background-color: #EAD3D7;" text="Log Out" textFill="#43115b">
+         <font>
+            <Font name="Gill Sans Ultra Bold Condensed" size="22.0" />
+         </font>
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+         <effect>
+            <DropShadow height="35.83" radius="17.415" width="35.83" />
+         </effect>
+      </Button>
+      <TextField fx:id="textAplayer" editable="false" layoutX="322.0" layoutY="405.0" prefHeight="39.0" prefWidth="88.0" style="-fx-background-radius: 50; -fx-alignment: center;">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </TextField>
+      <Label layoutX="43.0" layoutY="412.0" text="Number of available players">
+         <font>
+            <Font name="Franklin Gothic Medium" size="21.0" />
+         </font>
+         <effect>
+            <DropShadow color="WHITE" height="11.87" radius="4.6925" spread="0.83" width="8.9" />
+         </effect>
+      </Label>
+   </children>
+</AnchorPane>
