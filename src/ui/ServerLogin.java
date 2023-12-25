@@ -10,8 +10,6 @@ import server.Server;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;

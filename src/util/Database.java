@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.Player;
-import server.ServerHandler;
 
 /**
  *
@@ -36,7 +35,6 @@ public class Database {
             try {
                 Class.forName("org.apache.derby.jdbc.ClientDriver");
                 connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
-                System.out.println("Connected to the database");
             } catch (ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
                 throw new RuntimeException("Failed to connect to the database");
@@ -62,17 +60,6 @@ public class Database {
 
             if (resultSet.next()) {
                 authenticateId = resultSet.getInt("id");
-
-                String availableQuery  = "update player set isOnline = ? , isAvailable= ? where id= ?";
-                preparedStatement = connection.prepareStatement(availableQuery);
-                preparedStatement.setBoolean(1, true);
-                preparedStatement.setBoolean(2, true);
-                preparedStatement.setInt(3, authenticateId);
-                int rowsAffected = preparedStatement.executeUpdate();
-                if(rowsAffected <= 0) {
-                    authenticateId= -1;
-                    System.out.println("Is Available Problem");
-                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -86,6 +73,50 @@ public class Database {
             }
         }
         return authenticateId;
+    }
+
+    public static boolean isOnline(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            String query = "SELECT isOnline FROM player WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getBoolean("isOnline");
+            } else {
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get isOnline");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    }
+
+    public static void makePlayerOnline(int authenticateId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+
+        try {
+            String availableQuery = "update player set isOnline = ? , isAvailable= ? where id= ?";
+            preparedStatement = connection.prepareStatement(availableQuery);
+            preparedStatement.setBoolean(1, true);
+            preparedStatement.setBoolean(2, true);
+            preparedStatement.setInt(3, authenticateId);
+            int rowsAffected = preparedStatement.executeUpdate();
+            System.err.println("Here: " + rowsAffected);
+        } catch (SQLException ex) {
+            System.err.println(ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 
     public static boolean registerPlayer(Player player) {
@@ -102,10 +133,15 @@ public class Database {
             preparedStatement.setBoolean(5, false);
             preparedStatement.setInt(6, 0);
 
-            rowsAffected = preparedStatement.executeUpdate();
+            try {
+                rowsAffected = preparedStatement.executeUpdate();
+            } catch (Exception exception) {
+                rowsAffected = 0;
+                System.err.println(exception.getMessage());
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException("Player registration failed");
+            throw new RuntimeException("Player registration Failed");
         } finally {
             closeStatement(preparedStatement);
         }
@@ -154,8 +190,7 @@ public class Database {
 
         return players;
     }
-  
-    
+
     public static String getPlayerName(int playerId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
@@ -182,9 +217,88 @@ public class Database {
         }
     }
 
+    public static boolean addFriend(int playerId, int friendId) {
+        connection = getConnection();
+
+        boolean isFriend = false;
+        try (PreparedStatement statement
+                = connection.prepareStatement("INSERT INTO friends (player_id, friend_id) VALUES (?, ?)")) {
+
+            statement.setInt(1, playerId);
+            statement.setInt(2, friendId);
+
+            int rowAffected = statement.executeUpdate();
+            if (rowAffected > 0) {
+                isFriend = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isFriend;
+    }
+
+    public static boolean removeFriend(int playerId, int friendId) {
+        connection = getConnection();
+        boolean isNotFriend = false;
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM friends WHERE (player_id = ? AND friend_id = ?)")) {
+
+            statement.setInt(1, playerId);
+            statement.setInt(2, friendId);
+
+            int rowAffected = statement.executeUpdate();
+            if (rowAffected > 0) {
+                isNotFriend = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isNotFriend;
+    }
+
+    public static boolean blockPlayer(int playerId, int blockedId) {
+        connection = getConnection();
+
+        boolean isBlocked = false;
+        try (PreparedStatement statement
+                = connection.prepareStatement("INSERT INTO blocks (player_id, blocked_id) VALUES (?, ?), (?, ?)")) {
+
+            statement.setInt(1, playerId);
+            statement.setInt(2, blockedId);
+            statement.setInt(3, blockedId);
+            statement.setInt(4, playerId);
+
+            int rowAffected = statement.executeUpdate();
+            if (rowAffected > 0) {
+                isBlocked = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isBlocked;
+    }
+
+    public static boolean unBlockPlayer(int playerId, int unblockedId) {
+        connection = getConnection();
+        boolean isUnBlocked = false;
+        try (PreparedStatement statement
+                = connection.prepareStatement("DELETE FROM blocks WHERE (player_id = ? AND blocked_id = ?) OR (player_id = ? AND blocked_id = ?)")) {
+
+            statement.setInt(1, playerId);
+            statement.setInt(2, unblockedId);
+            statement.setInt(3, unblockedId);
+            statement.setInt(4, playerId);
+
+            int rowAffected = statement.executeUpdate();
+            if (rowAffected > 0) {
+                isUnBlocked = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isUnBlocked;
+    }
 
     public static Player getPlayerNameAndScore(int playerId) {
-         System.out.println("get data of Player from database");
         connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -210,7 +324,6 @@ public class Database {
             closeStatement(preparedStatement);
         }
     }
-
 
     // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {
