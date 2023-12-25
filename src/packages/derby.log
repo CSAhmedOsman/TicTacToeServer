@@ -1,11 +1,8 @@
-
-
-Fri Dec 22 17:46:43 PST 2023 : Apache Derby Network Server - 10.11.1.2 - (1629631) started and ready to accept connections on port 1527
+Sun Dec 24 19:21:14 PST 2023 : Apache Derby Network Server - 10.11.1.2 - (1629631) started and ready to accept connections on port 1527
 ----------------------------------------------------------------
-Fri Dec 22 17:46:43 PST 2023:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.2 - (1629631): instance a816c00e-018c-945a-2ee6-00005cd7b86c 
+Sun Dec 24 19:21:14 PST 2023:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.2 - (1629631): instance a816c00e-018c-9efd-6f1b-00005cd7b86c 
 on database directory C:\Users\Elham\Documents\NetBeansProjects\TicTacToeServer\src\packages\TicTacToeDB with class loader sun.misc.Launcher$AppClassLoader@6f94fa3e 
-
 Loaded from file:/C:/Program%20Files/Java/jdk1.8.0_112/db/lib/derby.jar
 java.vendor=Oracle Corporation
 java.runtime.version=1.8.0_112-b15
@@ -13,16 +10,5 @@ user.dir=C:\Program Files\Java\jdk1.8.0_112\db
 os.name=Windows 10
 os.arch=amd64
 os.version=10.0
-
 derby.system.home=C:\Users\Elham\Documents\NetBeansProjects\TicTacToeServer\src\packages
 Database Class Loader started - derby.database.classpath=''
-
-----------------------------------------------------------------
-Fri Dec 22 23:46:59 PST 2023: Shutting down Derby engine
-----------------------------------------------------------------
-Fri Dec 22 23:46:59 PST 2023:
-Shutting down instance a816c00e-018c-945a-2ee6-00005cd7b86c on database directory C:\Users\Elham\Documents\NetBeansProjects\TicTacToeServer\src\packages\TicTacToeDB with class loader sun.misc.Launcher$AppClassLoader@6f94fa3e 
-
-----------------------------------------------------------------
-Sat Dec 23 15:52:24 EET 2023: Shutting down Derby engine
-
