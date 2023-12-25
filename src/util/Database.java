@@ -54,7 +54,6 @@ public class Database {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                makePlayerOnline(authenticateId);
                 authenticateId = resultSet.getInt("id");
             }
         } catch (SQLException e) {
@@ -90,7 +89,7 @@ public class Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to is Online or not");
+            throw new RuntimeException("Failed to get isOnline");
         } finally {
             closeResultSet(resultSet);
             closeStatement(preparedStatement);
@@ -107,7 +106,8 @@ public class Database {
             preparedStatement.setBoolean(1, true);
             preparedStatement.setBoolean(2, true);
             preparedStatement.setInt(3, authenticateId);
-            preparedStatement.executeUpdate();
+            int rowsAffected= preparedStatement.executeUpdate();
+            System.err.println("Here: "+ rowsAffected);
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
             ex.printStackTrace();
