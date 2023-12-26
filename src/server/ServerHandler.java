@@ -51,7 +51,6 @@ public class ServerHandler extends Thread {
         }
 
         start();
-
     }
 
     @Override
