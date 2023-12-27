@@ -25,7 +25,7 @@ public class Database {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
-    private static Connection connection;
+    public static Connection connection;
 
     private Database() {
     }
@@ -62,14 +62,14 @@ public class Database {
             if (resultSet.next()) {
                 authenticateId = resultSet.getInt("id");
 
-                String availableQuery  = "update player set isOnline = ? , isAvailable= ? where id= ?";
+                String availableQuery = "update player set isOnline = ? , isAvailable= ? where id= ?";
                 preparedStatement = connection.prepareStatement(availableQuery);
                 preparedStatement.setBoolean(1, true);
                 preparedStatement.setBoolean(2, true);
                 preparedStatement.setInt(3, authenticateId);
                 int rowsAffected = preparedStatement.executeUpdate();
-                if(rowsAffected <= 0) {
-                    authenticateId= -1;
+                if (rowsAffected <= 0) {
+                    authenticateId = -1;
                     System.out.println("Is Available Problem");
                 }
             }
@@ -90,7 +90,7 @@ public class Database {
     public static boolean registerPlayer(Player player) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
-	int rowsAffected = 0;
+        int rowsAffected = 0;
         try {
             String query = "INSERT INTO player (name, email, password, isOnline, isAvailable, score) VALUES (?, ?, ?, ?, ?, ?)";
             preparedStatement = connection.prepareStatement(query);
@@ -101,7 +101,7 @@ public class Database {
             preparedStatement.setBoolean(5, false);
             preparedStatement.setInt(6, 0);
 
-            int rowsAffected = preparedStatement.executeUpdate();
+            rowsAffected = preparedStatement.executeUpdate();
 
             return rowsAffected > 0;
 
@@ -112,7 +112,7 @@ public class Database {
             closeStatement(preparedStatement);
             closeConnection();
         }
-            return rowsAffected > 0;
+
     }
 
     public static ArrayList<Player> getAvaliablePlayer() {
@@ -122,7 +122,6 @@ public class Database {
         ResultSet rs = null;
         try {
             preparedStatement = connection.prepareStatement(
-                    
                     "SELECT NAME, SCORE, id FROM player WHERE ISAVAILABLE = true AND ISONLINE = true",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY
@@ -135,7 +134,6 @@ public class Database {
                 int score = rs.getInt("SCORE");
                 int id = rs.getInt("id");
 
-                
                 Player player = new Player(id, name, score);
                 players.add(player);
             }
@@ -143,7 +141,7 @@ public class Database {
         } catch (SQLException ex) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            
+
             try {
                 if (rs != null) {
                     rs.close();
@@ -163,7 +161,7 @@ public class Database {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-
+        String name = null;
         try {
             String query = "SELECT name FROM player WHERE id = ?";
             preparedStatement = connection.prepareStatement(query);
@@ -172,9 +170,7 @@ public class Database {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                return resultSet.getString("name");
-            } else {
-                return null;
+                name = resultSet.getString("name");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -183,13 +179,93 @@ public class Database {
             closeResultSet(resultSet);
             closeStatement(preparedStatement);
         }
+        return name;
     }
+
+    public static int getPlayerScore(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int result = 0;
+
+        try {
+            String query = "SELECT score FROM player WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                result = resultSet.getInt("score");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player Score");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return result;
+    }
+
+    public static int updatePlayerScore(int srcplayerId, int type) {
+        Connection connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int result = 0;
+        try {
+            if (type == 1) {
+                String query = "UPDATE player SET score = SCORE+3 WHERE id = ?";
+                preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setInt(1, srcplayerId);
+                int rowsAffected = preparedStatement.executeUpdate();
+            } else {
+                String updateQuery = "UPDATE player SET score = score+1 WHERE id = ?";
+                preparedStatement = connection.prepareStatement(updateQuery);
+                preparedStatement.setInt(1, srcplayerId);
+                int rowsAffected = preparedStatement.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update player Score");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return result;
+    }
+
+    public static boolean setNotAvailable(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int rowsAffected = 0;
+        try {
+            String query = "UPDATE player SET isAvailable = ? WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setBoolean(1, false);
+            preparedStatement.setInt(2, playerId);
+            rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player id");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    }
+
     // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {
         if (connection != null) {
             try {
-                if (!connection.isClosed())
+                if (!connection.isClosed()) {
                     connection.close();
+                }
                 System.out.println("Connection closed");
             } catch (SQLException e) {
                 e.printStackTrace();

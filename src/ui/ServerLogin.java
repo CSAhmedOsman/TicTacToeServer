@@ -400,7 +400,7 @@ public class ServerLogin extends AnchorPane {
         btnConnect.setOnAction(e -> {
             connectToServer();
             connectToDatabase();
-            navigateToNextScene(stage, Database.getConnection());
+            navigateToNextScene(stage, Database.connection);
         });
         btnMin.setOnAction(e -> {
             stage.setIconified(true); // This will minimize the window
@@ -414,30 +414,28 @@ public class ServerLogin extends AnchorPane {
         passwordField.setText("root");
     }
 
-    private boolean connectToDatabase() {
+    private void connectToDatabase() {
         String username = textUserName.getText();
         String password = passwordField.getText();
         try {
             DriverManager.registerDriver(new ClientDriver());
-            Connection connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
+            Database.connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
             statusLabel.setText("Connected to database!");
-            return true;
         } catch (SQLException e) {
             // Connection failed
             statusLabel.setTextFill(Color.RED);
-            statusLabel.setText("DB Connection failed: \n" + e.getMessage());
-            return false;
+            statusLabel.setText("DB Connection failed: \n" + e.getMessage()); 
         }
     }
 
-    private boolean connectToServer() {
+    private void connectToServer() {
         try {
             server = new Server();
-            return true;
+          
         } catch (IOException e) {
             statusLabel.setTextFill(Color.RED);
             statusLabel.setText("Server Connection failed: \n" + e.getMessage());
-            return false;
+         
         }
     }
 

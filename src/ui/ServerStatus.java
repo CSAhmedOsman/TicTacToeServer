@@ -462,10 +462,10 @@ public class ServerStatus extends AnchorPane {
         });
         btnLogOut.setOnAction((event) -> {
                     disconnectFromSQL(connection);
+                    server.close();
                     th.stop();
                     Stage stage = (Stage) btnLogOut.getScene().getWindow();
                     navigateToNextScene(stage);
-                
                 });
         }
     
