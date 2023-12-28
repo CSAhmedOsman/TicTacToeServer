@@ -5,6 +5,7 @@
  */
 package server;
 
+import model.GameInfo;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
@@ -21,6 +22,8 @@ import java.lang.reflect.Type;
 import java.util.Vector;
 
 import model.Message;
+import java.util.HashSet;
+import java.util.Set;
 import util.Database;
 
 /**
@@ -84,7 +87,6 @@ public class ServerHandler extends Thread {
         requestData = gson.fromJson(gsonRequest, listType);
 
         double action = (double) requestData.get(0);
-
         switch ((int) action) {
             case Constants.REGISTER:
                 register();
@@ -93,37 +95,28 @@ public class ServerHandler extends Thread {
                 login();
                 break;
             case Constants.GET_AVAILIABLE_PLAYERS:
-                System.out.println("getAvailablePlayers from server1111");
                 getAvailablePlayers();
-
                 break;
             case Constants.REQUEST:
                 request();
                 break;
-            case 5:
-                //TODO accept();
+            case Constants.BROADCAST_MESSAGE:
+                sendMessageToAll();
                 break;
-            case 6:
-                //TODO updateBoard();
-                break;
-            case 7:
-                //TODO logout();
-                break;
-            case 8:
-                // TODO save();
-                break;
-            case 9:
-                //TODO finish();
-                break;
-
             case Constants.SENDMESSAGE:
                 sendMessage();
                 break;
-            case 11:
-                //getAvailablePlayers();
+            case Constants.SENDINVITE:
+                sendInvit();
                 break;
-            case Constants.BROADCAST_MESSAGE:
-                sendMessageToAll();
+            case Constants.ACCEPTGAME:
+                acceptGame();
+                break;
+            case Constants.SENDMOVE:
+                gameHandler();
+                break;
+            case Constants.EXIT_PLAYER_GAME:
+                handleExit();
                 break;
             case Constants.ADD_FRIEND:
                 addFriend();
@@ -137,8 +130,9 @@ public class ServerHandler extends Thread {
             case Constants.UN_BLOCK_PLAYER:
                 unBlockPlayer();
                 break;
-            case Constants.PLAYER_ONLINE:
+            case Constants.ONLINE:
                 makePlayerOnline();
+                break;
         }
     }
 
@@ -168,12 +162,10 @@ public class ServerHandler extends Thread {
         if (authenticatePlayerId != -1) {
             playerId = authenticatePlayerId;
         }
-
         // Constants Better Than Java Doc
         if (Database.isOnline(authenticatePlayerId)) {
             authenticatePlayerId = -2;
         }
-
         ArrayList<Integer> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.LOGIN);
         jsonResponse.add(authenticatePlayerId);
@@ -269,6 +261,109 @@ public class ServerHandler extends Thread {
             }
         }
         return destinationHandler;
+    }
+//------------------------abdelrhman-----------------------
+
+    private void accept() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void sendInvit() {
+
+        GameInfo info = gson.fromJson(gson.toJson(requestData.get(1)), GameInfo.class);
+        double type = (double) requestData.get(2);
+        ServerHandler destinationSocket = getDestinationSocket(info.getDestPlayerId());
+
+        if (destinationSocket != null && !destinationSocket.isInterrupted()) {
+
+            ArrayList<Object> jsonArr = new ArrayList<>();
+
+            jsonArr.add(Constants.SENDINVITE);
+            jsonArr.add(gson.toJson(info));
+            jsonArr.add(type);
+
+            String gsonRequest = gson.toJson(jsonArr);
+            destinationSocket.out.println(gsonRequest);
+        } else {
+            System.err.println("Destination socket is null. Cannot send invitation.");
+        }
+
+    }
+
+    private void acceptGame() {
+
+        double srcPlayerId = (double) requestData.get(1);
+        double destPlayerId = (double) requestData.get(2);
+        double type = (double) requestData.get(3);
+
+        int srcId = (int) srcPlayerId;
+        int destId = (int) destPlayerId;
+
+        Database.setNotAvailable(srcId);
+        Database.setNotAvailable(destId);
+
+        ServerHandler sourceSocket = getDestinationSocket(srcId);
+        ServerHandler destinationSocket = getDestinationSocket(destId);
+
+        String player1Name = Database.getPlayerName(srcId);
+        String player2Name = Database.getPlayerName(destId);
+
+        int player1Score = Database.getPlayerScore(srcId);
+        int player2Score = Database.getPlayerScore(destId);
+
+        GameInfo info = new GameInfo(player2Name, player1Name, destId, srcId, player2Score, player1Score);
+
+        ArrayList<Object> jsonPlayer1 = new ArrayList<>();
+        jsonPlayer1.add(Constants.ACCEPTGAME);
+        jsonPlayer1.add(gson.toJson(info));
+        jsonPlayer1.add(true);
+        jsonPlayer1.add(type);
+
+        String gsonRequest1 = gson.toJson(jsonPlayer1);
+        destinationSocket.out.println(gsonRequest1);
+
+        info = new GameInfo(player1Name, player2Name, srcId, destId, player1Score, player2Score);
+
+        ArrayList<Object> jsonPlayer2 = new ArrayList<>();
+        jsonPlayer2.add(Constants.ACCEPTGAME);
+        jsonPlayer2.add(gson.toJson(info));
+        jsonPlayer2.add(false);
+        jsonPlayer2.add(type);
+        String gsonRequest2 = gson.toJson(jsonPlayer2);
+        sourceSocket.out.println(gsonRequest2);
+    }
+
+    private void gameHandler() {
+        String playable = (String) requestData.get(1);
+        double x = (double) requestData.get(2);
+        double y = (double) requestData.get(3);
+        double destPlayerId = (double) requestData.get(4);
+
+        ServerHandler destinationSocket = getDestinationSocket((int) destPlayerId);
+
+        ArrayList<Object> jsonArr = new ArrayList<>();
+        jsonArr.add(Constants.SENDMOVE);
+        jsonArr.add(playable);
+        jsonArr.add((int) x);
+        jsonArr.add((int) y);
+        String gsonRequest = gson.toJson(jsonArr);
+        destinationSocket.out.println(gsonRequest);
+    }
+
+    private void hanleScore() {
+        GameInfo info = gson.fromJson(gson.toJson(requestData.get(1)), GameInfo.class);
+        double type = (double) requestData.get(2);
+        Database.updatePlayerScore(info.getSrcPlayerId(), (int) type);
+    }
+
+    private void handleExit() {
+        double srcPlayerId = (double) requestData.get(1);
+        ServerHandler sourceSocket = getDestinationSocket((int) srcPlayerId);
+        ArrayList<Object> jsonArr = new ArrayList<>();
+        jsonArr.add(Constants.EXIT_PLAYER_GAME);
+        String gsonRequest = gson.toJson(jsonArr);
+        sourceSocket.out.println(gsonRequest);
+
     }
 
     private void addFriend() {
