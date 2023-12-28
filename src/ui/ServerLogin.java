@@ -10,8 +10,6 @@ import server.Server;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
@@ -74,8 +72,9 @@ public class ServerLogin extends AnchorPane {
     private double xOffset = 0;
     private double yOffset = 0;
     Server server;
+    Connection connection;
 
-    public ServerLogin(Stage stage) {
+    public ServerLogin() {
 
         rectangle = new Rectangle();
         label = new Label();
@@ -396,22 +395,20 @@ public class ServerLogin extends AnchorPane {
         textDBname.setDisable(true);
         textServer.setText("5005");
         textServer.setDisable(true);
-        
+
         btnConnect.setOnAction(e -> {
             connectToServer();
             connectToDatabase();
-            navigateToNextScene(stage, Database.connection);
+                navigateToNextScene();
+           
         });
         btnMin.setOnAction(e -> {
+            Stage stage = (Stage) this.getScene().getWindow();
             stage.setIconified(true); // This will minimize the window
         });
         btnClose.setOnAction(e -> {
             Platform.exit();
-            stage.close();
         });
-        
-        textUserName.setText("root");
-        passwordField.setText("root");
     }
 
     private void connectToDatabase() {
@@ -430,25 +427,18 @@ public class ServerLogin extends AnchorPane {
 
     private void connectToServer() {
         try {
-            server = new Server();
-          
+            server = Server.getServer();
         } catch (IOException e) {
             statusLabel.setTextFill(Color.RED);
             statusLabel.setText("Server Connection failed: \n" + e.getMessage());
-         
         }
     }
 
-    private void navigateToNextScene(Stage stage, Connection connection) {
-
-        Stage newStage = new Stage();
-        newStage.initStyle(StageStyle.TRANSPARENT);
+    private void navigateToNextScene() {
+        Stage stage = (Stage) this.getScene().getWindow();
         Parent root = new ServerStatus(connection, server);
         Scene scene = new Scene(root);
-        
-        newStage.setScene(scene);
-        newStage.show();
-        stage.close();
-
+        stage.setScene(scene);
+        stage.show();
     }
 }
