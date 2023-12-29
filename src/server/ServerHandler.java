@@ -125,6 +125,9 @@ public class ServerHandler extends Thread {
             case Constants.SENDMOVE:
                 gameHandler();
                 break;
+            case Constants.UPDATESCORE:
+                hanleScore();
+                break;
             case Constants.EXIT_PLAYER_GAME:
                 handleExit();
                 break;
@@ -294,10 +297,6 @@ public class ServerHandler extends Thread {
         return destinationHandler;
     }
 //------------------------abdelrhman-----------------------
-
-    private void accept() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
     private void sendInvit() {
 

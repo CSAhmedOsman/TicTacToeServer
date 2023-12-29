@@ -60,16 +60,6 @@ public class Database {
 
             if (resultSet.next()) {
                 authenticateId = resultSet.getInt("id");
-                String availableQuery = "update player set isOnline = ? , isAvailable= ? where id= ?";
-                preparedStatement = connection.prepareStatement(availableQuery);
-                preparedStatement.setBoolean(1, true);
-                preparedStatement.setBoolean(2, true);
-                preparedStatement.setInt(3, authenticateId);
-                int rowsAffected = preparedStatement.executeUpdate();
-                if (rowsAffected <= 0) {
-                    authenticateId = -1;
-                    System.out.println("Is Available Problem");
-                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -114,7 +104,6 @@ public class Database {
     public static void makePlayerOnline(int authenticateId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
-
         try {
             String availableQuery = "update player set isOnline = ? , isAvailable= ? where id= ?";
             preparedStatement = connection.prepareStatement(availableQuery);
@@ -156,12 +145,12 @@ public class Database {
         }
         return rowsAffected > 0;
     }
-  
+
     public static Player getDataOfPlayer(int playerId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-        Player player=null;
+        Player player = null;
 
         try {
             String query = "SELECT  name, email, password FROM PLAYER WHERE id = ?";
@@ -171,7 +160,7 @@ public class Database {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                player= new Player(resultSet.getString("name"), resultSet.getString("email"),resultSet.getString("password"));
+                player = new Player(resultSet.getString("name"), resultSet.getString("email"), resultSet.getString("password"));
 
             }
         } catch (SQLException e) {
@@ -181,34 +170,36 @@ public class Database {
             closeResultSet(resultSet);
             closeStatement(preparedStatement);
         }
-    return  player;
+        return player;
     }
+
     public static boolean updateUserProfile(Player player) {
-        Connection connection = null; 
+        Connection connection = null;
         PreparedStatement preparedStatement = null;
         ResultSet rs = null;
 
         try {
             connection = getConnection();
-            preparedStatement = connection.prepareStatement("UPDATE ROOT.PLAYER SET NAME = ?, email = ?, password = ? WHERE ID ="+player.getId());
-             
+            preparedStatement = connection.prepareStatement("UPDATE ROOT.PLAYER SET NAME = ?, email = ?, password = ? WHERE ID =" + player.getId());
+
             preparedStatement.setString(1, player.getName());
 
             preparedStatement.setString(2, player.getEmail());
 
             preparedStatement.setString(3, player.getPassword());
 
-           // preparedStatement.setInt(4, player.getId());
+            // preparedStatement.setInt(4, player.getId());
             System.out.println("DataBase");
-            System.out.print(player.getName()+" "+player.getEmail()+" "+player.getPassword()+" "+player.getId());
-            
+            System.out.print(player.getName() + " " + player.getEmail() + " " + player.getPassword() + " " + player.getId());
+
             int rowsUpdated = preparedStatement.executeUpdate();
             if (rowsUpdated > 0) {
-              return true;}
+                return true;
+            }
         } catch (SQLException e) {
-            e.printStackTrace(); 
+            e.printStackTrace();
         } finally {
-           
+
             try {
                 if (rs != null) {
                     rs.close();
@@ -220,11 +211,11 @@ public class Database {
                     connection.close();
                 }
             } catch (SQLException e) {
-                e.printStackTrace(); 
+                e.printStackTrace();
             }
         }
 
-        return false; 
+        return false;
     }
 
     public static ArrayList<Player> getAvailablePlayers() {
@@ -376,7 +367,7 @@ public class Database {
         return isUnBlocked;
     }
 
-        public static Player getPlayerNameAndScore(int playerId) {
+    public static Player getPlayerNameAndScore(int playerId) {
         System.out.println("get data of Player from database");
         connection = getConnection();
         PreparedStatement preparedStatement = null;
