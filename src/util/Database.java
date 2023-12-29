@@ -26,7 +26,7 @@ public class Database {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
 
-    private static Connection connection;
+    public static Connection connection;
 
     private Database() {
     }
@@ -105,7 +105,6 @@ public class Database {
     public static void makePlayerOnline(int authenticateId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
-
         try {
             String availableQuery = "update player set isOnline = ? , isAvailable= ? where id= ?";
             preparedStatement = connection.prepareStatement(availableQuery);
@@ -133,7 +132,6 @@ public class Database {
             preparedStatement.setBoolean(4, false);
             preparedStatement.setBoolean(5, false);
             preparedStatement.setInt(6, 0);
-
             try {
                 rowsAffected = preparedStatement.executeUpdate();
             } catch (Exception exception) {
@@ -149,6 +147,78 @@ public class Database {
         return rowsAffected > 0;
     }
 
+    public static Player getDataOfPlayer(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        Player player = null;
+
+        try {
+            String query = "SELECT  name, email, password FROM PLAYER WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                player = new Player(resultSet.getString("name"), resultSet.getString("email"), resultSet.getString("password"));
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player name");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return player;
+    }
+
+    public static boolean updateUserProfile(Player player) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet rs = null;
+
+        try {
+            connection = getConnection();
+            preparedStatement = connection.prepareStatement("UPDATE ROOT.PLAYER SET NAME = ?, email = ?, password = ? WHERE ID =" + player.getId());
+
+            preparedStatement.setString(1, player.getName());
+
+            preparedStatement.setString(2, player.getEmail());
+
+            preparedStatement.setString(3, player.getPassword());
+
+            // preparedStatement.setInt(4, player.getId());
+            System.out.println("DataBase");
+            System.out.print(player.getName() + " " + player.getEmail() + " " + player.getPassword() + " " + player.getId());
+
+            int rowsUpdated = preparedStatement.executeUpdate();
+            if (rowsUpdated > 0) {
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return false;
+    }
+
     public static ArrayList<Player> getAvailablePlayers() {
         System.out.println("getAvailablePlayers from database");
         Connection connection = getConnection();
@@ -158,7 +228,7 @@ public class Database {
 
         try {
             preparedStatement = connection.prepareStatement(
-                    "SELECT id, NAME, SCORE FROM PLAYER WHERE ISAVAILABLE = true",
+                    "SELECT NAME, SCORE, id FROM player WHERE ISAVAILABLE = true AND ISONLINE = true",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY
             );
@@ -196,7 +266,7 @@ public class Database {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
-
+        String name = null;
         try {
             String query = "SELECT name FROM player WHERE id = ?";
             preparedStatement = connection.prepareStatement(query);
@@ -205,9 +275,7 @@ public class Database {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                return resultSet.getString("name");
-            } else {
-                return null;
+                name = resultSet.getString("name");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -216,6 +284,7 @@ public class Database {
             closeResultSet(resultSet);
             closeStatement(preparedStatement);
         }
+        return name;
     }
 
     public static boolean addFriend(int playerId, int friendId) {
@@ -300,6 +369,7 @@ public class Database {
     }
 
     public static Player getPlayerNameAndScore(int playerId) {
+        System.out.println("get data of Player from database");
         connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -320,6 +390,83 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to get player name");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    }
+
+    public static int getPlayerScore(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int result = 0;
+
+        try {
+            String query = "SELECT score FROM player WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                result = resultSet.getInt("score");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player Score");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return result;
+    }
+
+    public static int updatePlayerScore(int srcplayerId, int type) {
+        Connection connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int result = 0;
+        try {
+            if (type == 1) {
+                String query = "UPDATE player SET score = SCORE+3 WHERE id = ?";
+                preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setInt(1, srcplayerId);
+                int rowsAffected = preparedStatement.executeUpdate();
+            } else {
+                String updateQuery = "UPDATE player SET score = score+1 WHERE id = ?";
+                preparedStatement = connection.prepareStatement(updateQuery);
+                preparedStatement.setInt(1, srcplayerId);
+                int rowsAffected = preparedStatement.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to update player Score");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return result;
+    }
+
+    public static boolean setNotAvailable(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int rowsAffected = 0;
+        try {
+            String query = "UPDATE player SET isAvailable = ? WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setBoolean(1, false);
+            preparedStatement.setInt(2, playerId);
+            rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player id");
         } finally {
             closeResultSet(resultSet);
             closeStatement(preparedStatement);
