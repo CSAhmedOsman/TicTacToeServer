@@ -10,8 +10,6 @@ import server.Server;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
@@ -399,9 +397,10 @@ public class ServerLogin extends AnchorPane {
         textServer.setDisable(true);
 
         btnConnect.setOnAction(e -> {
-            if (connectToServer() && connectToDatabase()) {
+            connectToServer();
+            connectToDatabase();
                 navigateToNextScene();
-            }
+           
         });
         btnMin.setOnAction(e -> {
             Stage stage = (Stage) this.getScene().getWindow();
@@ -412,30 +411,26 @@ public class ServerLogin extends AnchorPane {
         });
     }
 
-    private boolean connectToDatabase() {
+    private void connectToDatabase() {
         String username = textUserName.getText();
         String password = passwordField.getText();
         try {
             DriverManager.registerDriver(new ClientDriver());
-            connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
+            Database.connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", username, password);
             statusLabel.setText("Connected to database!");
-            return true;
         } catch (SQLException e) {
             // Connection failed
             statusLabel.setTextFill(Color.RED);
-            statusLabel.setText("DB Connection failed: \n" + e.getMessage());
-            return false;
+            statusLabel.setText("DB Connection failed: \n" + e.getMessage()); 
         }
     }
 
-    private boolean connectToServer() {
+    private void connectToServer() {
         try {
-            server = server.getServer();
-            return true;
+            server = Server.getServer();
         } catch (IOException e) {
             statusLabel.setTextFill(Color.RED);
             statusLabel.setText("Server Connection failed: \n" + e.getMessage());
-            return false;
         }
     }
 

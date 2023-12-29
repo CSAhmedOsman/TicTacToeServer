@@ -39,7 +39,6 @@ public class ServerApp extends Application {
         stage.setScene(scene);
         stage.show();
     }
-
     /**
      * @param args the command line arguments
      */

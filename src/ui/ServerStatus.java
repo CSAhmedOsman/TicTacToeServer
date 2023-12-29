@@ -12,6 +12,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Cursor;
@@ -35,6 +37,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.apache.derby.jdbc.ClientDriver;
 import server.Server;
+import static util.Database.connection;
 
 /**
  *
@@ -488,6 +491,16 @@ public class ServerStatus extends AnchorPane {
                 // After 30 seconds, enable the button on the JavaFX Application Thread
                 Platform.runLater(() -> btnRefresh.setDisable(false));
             }).start();
+        });
+        btnLogOut.setOnAction((event) -> {
+            try {
+                disconnectFromSQL(connection);
+                myServer.close();
+                th.stop();
+                navigateToNextScene();
+            } catch (SQLException ex) {
+                Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
     }
 

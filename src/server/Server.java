@@ -22,11 +22,11 @@ public class Server implements Runnable {
     Thread thread;
     boolean isRunning;
     private static Server singletonServer;
-
+    
     {
         isRunning = true;
     }
-
+    
     private Server() {
     }
 
