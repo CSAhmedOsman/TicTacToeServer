@@ -63,14 +63,14 @@ public class Database {
             if (resultSet.next()) {
                 authenticateId = resultSet.getInt("id");
 
-                String availableQuery  = "update player set isOnline = ? , isAvailable= ? where id= ?";
+                String availableQuery = "update player set isOnline = ? , isAvailable= ? where id= ?";
                 preparedStatement = connection.prepareStatement(availableQuery);
                 preparedStatement.setBoolean(1, true);
                 preparedStatement.setBoolean(2, true);
                 preparedStatement.setInt(3, authenticateId);
                 int rowsAffected = preparedStatement.executeUpdate();
-                if(rowsAffected <= 0) {
-                    authenticateId= -1;
+                if (rowsAffected <= 0) {
+                    authenticateId = -1;
                     System.out.println("Is Available Problem");
                 }
             }
@@ -110,6 +110,76 @@ public class Database {
             closeStatement(preparedStatement);
         }
         return rowsAffected > 0;
+    }
+  
+    public static Player getDataOfPlayer(int playerId) {
+        connection = getConnection();
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        Player player=null;
+
+        try {
+            String query = "SELECT  name, email, password FROM PLAYER WHERE id = ?";
+            preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                player= new Player(resultSet.getString("name"), resultSet.getString("email"),resultSet.getString("password"));
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player name");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+    return  player;
+    }
+    public static boolean updateUserProfile(Player player) {
+        Connection connection = null; 
+        PreparedStatement preparedStatement = null;
+        ResultSet rs = null;
+
+        try {
+            connection = getConnection();
+            preparedStatement = connection.prepareStatement("UPDATE ROOT.PLAYER SET NAME = ?, email = ?, password = ? WHERE ID ="+player.getId());
+             
+            preparedStatement.setString(1, player.getName());
+
+            preparedStatement.setString(2, player.getEmail());
+
+            preparedStatement.setString(3, player.getPassword());
+
+           // preparedStatement.setInt(4, player.getId());
+            System.out.println("DataBase");
+            System.out.print(player.getName()+" "+player.getEmail()+" "+player.getPassword()+" "+player.getId());
+            
+            int rowsUpdated = preparedStatement.executeUpdate();
+            if (rowsUpdated > 0) {
+              return true;}
+        } catch (SQLException e) {
+            e.printStackTrace(); 
+        } finally {
+           
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace(); 
+            }
+        }
+
+        return false; 
     }
 
     public static ArrayList<Player> getAvailablePlayers() {
@@ -154,8 +224,7 @@ public class Database {
 
         return players;
     }
-  
-    
+
     public static String getPlayerName(int playerId) {
         connection = getConnection();
         PreparedStatement preparedStatement = null;
@@ -182,9 +251,8 @@ public class Database {
         }
     }
 
-
     public static Player getPlayerNameAndScore(int playerId) {
-         System.out.println("get data of Player from database");
+        System.out.println("get data of Player from database");
         connection = getConnection();
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -210,7 +278,6 @@ public class Database {
             closeStatement(preparedStatement);
         }
     }
-
 
     // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {

@@ -22,10 +22,8 @@ import java.lang.reflect.Type;
 import java.util.Vector;
 import model.Message;
 
-
 import java.util.HashSet;
 import java.util.Set;
-
 
 import util.Database;
 
@@ -124,13 +122,22 @@ public class ServerHandler extends Thread {
 
             case Constants.SENDMESSAGE:
                 sendMessage();
-    
+
                 break;
             case 11:
                 //getAvailablePlayers();
                 break;
             case Constants.BROADCAST_MESSAGE:
                 sendMessageToAll();
+                break;
+
+            case Constants.SETDATAOFPLAYER:
+                getData();
+                break;
+
+            case Constants.UPDATEUSERPROFILE:
+                updateUserProfile();
+                break;
         }
     }
 
@@ -146,47 +153,68 @@ public class ServerHandler extends Thread {
         out.println(gsonRequest);
     }
 
-   private void login() throws JsonSyntaxException {
+    private void login() throws JsonSyntaxException {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
-
 
         int authenticatePlayerId = Database.authenticatePlayer(currentplayer);
 
-
-        if(authenticatePlayerId!= -1)
+        if (authenticatePlayerId != -1) {
             playerId = authenticatePlayerId;
-
+        }
 
         ArrayList<Integer> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.LOGIN);
         jsonResponse.add(authenticatePlayerId);
-        
-        
 
         String gsonResponse = gson.toJson(jsonResponse);
         out.println(gsonResponse);
-        
+
     }
 
-   
-  private void getAvailablePlayers() {
+    private void getData() {
+        double playerID = (double) requestData.get(1);
+        Player player = Database.getDataOfPlayer((int)playerID);
+        System.out.println("player Data :" + player.getEmail() + " " + player.getName() + " " + player.getPassword());
+        ArrayList<Object> jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.SETDATAOFPLAYER);
+
+        jsonResponse.add(player.getName());
+        jsonResponse.add(player.getEmail());
+        jsonResponse.add(player.getPassword());
+        System.out.println("player Data :" + player.getEmail() + " " + player.getName() + " " + player.getPassword());
+
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);
+    }
+
+    public void updateUserProfile() {
+      Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
+
+        if (Database.updateUserProfile(currentplayer)) {
+            System.out.println("update User Profile");
+
+        }
+
+    }
+
+    private void getAvailablePlayers() {
         System.out.println("getAvailablePlayers from server");
         ArrayList<Player> players = Database.getAvailablePlayers();
         ArrayList<Object> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.GET_AVAILIABLE_PLAYERS);
-        
-         for (Player player : players) {
-             jsonResponse.add((double)player.getId());
-             jsonResponse.add(player.getName());
-             jsonResponse.add((double)player.getScore());
-             System.out.println("player Data :"+player.getId()+" "+player.getName()+ " "+player.getScore());
-            }
-         
+
+        for (Player player : players) {
+            jsonResponse.add((double) player.getId());
+            jsonResponse.add(player.getName());
+            jsonResponse.add((double) player.getScore());
+            System.out.println("player Data :" + player.getId() + " " + player.getName() + " " + player.getScore());
+        }
+
         String gsonRequest = gson.toJson(jsonResponse);
         out.println(gsonRequest);
     }
-  
- private void sendMessageToAll() {
+
+    private void sendMessageToAll() {
         double sourceId = (double) requestData.get(1);
         String broadCastMessage = (String) requestData.get(2);
 
@@ -203,24 +231,23 @@ public class ServerHandler extends Thread {
             serverHandler.out.println(gsonResponse);
         });
     }
+
     private void request() {
         double senderId = (double) requestData.get(1);
         double receiverId = (double) requestData.get(2);
-        Player p = Database.getPlayerNameAndScore((int)senderId);
-        System.out.println("player Data :"+(int)senderId+" "+p.getName()+" "+p.getScore());
+        Player p = Database.getPlayerNameAndScore((int) senderId);
+        System.out.println("player Data :" + (int) senderId + " " + p.getName() + " " + p.getScore());
         //Player player = new Player((int)senderId, p.getEmail(), p.getPassword());
         ArrayList<Object> jsonResponse = new ArrayList<>();
         jsonResponse.add(Constants.REQUEST);
         jsonResponse.add(senderId);
-        jsonResponse.add( p.getName());
+        jsonResponse.add(p.getName());
         jsonResponse.add(p.getScore());
         String gsonResponse = gson.toJson(jsonResponse);
         out.println(gsonResponse);
         System.out.println("Request received from: " + senderId + " to: " + receiverId);
 
     }
-
-   
 
     public static void closeSockets() {
         try {
@@ -235,7 +262,6 @@ public class ServerHandler extends Thread {
 
     }
 
-
     private void sendMessage() {
         Message message = gson.fromJson(gson.toJson(requestData.get(1)), Message.class);
 
@@ -248,7 +274,7 @@ public class ServerHandler extends Thread {
         jsonArr.add(srcPlayerName);
 
         String gsonRequest = gson.toJson(jsonArr);
-        
+
         destinationSocket.out.println(gsonRequest);
     }
 
