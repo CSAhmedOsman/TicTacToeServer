@@ -5,6 +5,7 @@
  */
 package ui;
 
+import database.Database;
 import java.io.IOException;
 import server.Server;
 import java.sql.Connection;
@@ -28,9 +29,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.apache.derby.jdbc.ClientDriver;
-import util.Database;
 
 public class ServerLogin extends AnchorPane {
 
@@ -68,9 +67,7 @@ public class ServerLogin extends AnchorPane {
     protected final Button btnConnect;
     protected final DropShadow dropShadow6;
     protected final PasswordField passwordField;
-    private Label statusLabel;
-    private double xOffset = 0;
-    private double yOffset = 0;
+    private final Label statusLabel;
     Server server;
     Connection connection;
 
@@ -391,9 +388,9 @@ public class ServerLogin extends AnchorPane {
         getChildren().add(btnConnect);
         getChildren().add(statusLabel);
 
-        textDBname.setText("TicTacToeDB");
+        textDBname.setText(Database.DB_NAME);
         textDBname.setDisable(true);
-        textServer.setText("5005");
+        textServer.setText(String.valueOf(Server.PORT_NUMBER));
         textServer.setDisable(true);
 
         btnConnect.setOnAction(e -> {
@@ -428,7 +425,7 @@ public class ServerLogin extends AnchorPane {
 
     private boolean connectToServer() {
         try {
-            server = server.getServer();
+            server = Server.getServer();
             return true;
         } catch (IOException e) {
             statusLabel.setTextFill(Color.RED);

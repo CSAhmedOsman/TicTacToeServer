@@ -10,7 +10,6 @@ package util;
  * @author w
  */
 public class Constants {
-    public static final int PORT_NUMBER= 5005;
     public static final int REGISTER = 1;
     public static final int LOGIN = 2;
     public static final int GET_AVAILIABLE_PLAYERS = 3;
@@ -25,5 +24,8 @@ public class Constants {
     public static final int BLOCK_PLAYER = 15;
     public static final int UN_BLOCK_PLAYER= 16;
     
-    public static final int PLAYER_ONLINE= 17;
+    public static final int ONLINE= 17;
+    
+    public static final int PLAYER_NOT_EXIST= -1;
+    public static final int PLAYER_ONLINE= -2;
 }
