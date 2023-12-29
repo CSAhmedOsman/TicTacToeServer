@@ -37,7 +37,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.apache.derby.jdbc.ClientDriver;
 import server.Server;
-import static util.Database.connection;
+import static database.Database.connection;
 
 /**
  *

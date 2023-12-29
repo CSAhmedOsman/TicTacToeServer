@@ -10,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import util.Constants;
 
 /**
  *
@@ -22,6 +21,7 @@ public class Server implements Runnable {
     Thread thread;
     boolean isRunning;
     private static Server singletonServer;
+    public static final int PORT_NUMBER= 5005;
     
     {
         isRunning = true;
@@ -39,7 +39,7 @@ public class Server implements Runnable {
     }
 
     private void startConnection() throws IOException {
-        myServerSocket = new ServerSocket(Constants.PORT_NUMBER);
+        myServerSocket = new ServerSocket(PORT_NUMBER);
         thread = new Thread(this);
         thread.start();
     }
@@ -49,7 +49,6 @@ public class Server implements Runnable {
         try {
             while (isRunning) {
                 Socket socket = myServerSocket.accept();
-                System.out.println("is Running Client 1");
                 new ServerHandler(socket);
             }
         } catch (IOException e) {
