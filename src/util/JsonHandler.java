@@ -23,7 +23,7 @@ public class JsonHandler {
 
     private static final Gson GSON = new Gson();
     
-    public static String serializeJson(int action, Object... requestArgs) {
+    public static String serializeJson(String action, String... requestArgs) {
         ArrayList<Object> jsonRequest = new ArrayList<>();
         jsonRequest.add(action);
 
@@ -34,5 +34,9 @@ public class JsonHandler {
 
     public static <T> T deserializeArray(String jsonResponse, Type arrayType) {
         return GSON.fromJson(jsonResponse, arrayType);
+    }
+    
+    public static String serelizeObject(Object requestObject) {
+        return GSON.toJson(requestObject);
     }
 }
