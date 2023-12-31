@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
+import util.AlertContstants;
 
 /**
  *
@@ -386,7 +387,7 @@ public class PlayerDAO {
         int rowAffected = 0;
         String query;
         try {
-            if (type == 1) {
+            if (type == AlertContstants.WIN_UPDATE_SCORE) {
                 query = "UPDATE player SET score = SCORE+3 WHERE id = ?";
 
             } else {
