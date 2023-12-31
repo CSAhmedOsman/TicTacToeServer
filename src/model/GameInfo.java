@@ -10,21 +10,25 @@ package model;
  * @author LENOVO
  */
 public class GameInfo {
+
     private final String srcPlayerName;
     private final String destPlayerName;
     private final int srcPlayerId;
     private final int destPlayerId;
     private final int srcPlayerScore;
     private final int destPlayerScore;
+    private final int prevSrcScore;
+    private final int prevDestScore;
 
-
-    public GameInfo(String srcPlayerName, String destPlayerName, int srcPlayerId, int destPlayerId, int srcPlayerScore, int destPlayerScore) {
+    public GameInfo(String srcPlayerName, String destPlayerName, int srcPlayerId, int destPlayerId, int srcPlayerScore, int destPlayerScore, int prevSrcScore, int prevDestScore) {
         this.srcPlayerName = srcPlayerName;
         this.destPlayerName = destPlayerName;
         this.srcPlayerId = srcPlayerId;
         this.destPlayerId = destPlayerId;
         this.srcPlayerScore = srcPlayerScore;
         this.destPlayerScore = destPlayerScore;
+        this.prevSrcScore = prevSrcScore;
+        this.prevDestScore = prevDestScore;
     }
 
     public String getSrcPlayerName() {
@@ -51,5 +55,12 @@ public class GameInfo {
         return destPlayerScore;
     }
 
-   
+    public int getPrevSrcScore() {
+        return prevSrcScore;
+    }
+
+    public int getPrevDestScore() {
+        return prevDestScore;
+    }
+
 }

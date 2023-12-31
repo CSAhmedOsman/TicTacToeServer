@@ -30,6 +30,7 @@ public class Constants {
     public static final int ONLINE = 16;
     public static final int SETDATAOFPLAYER = 17;
     public static final int UPDATEUSERPROFILE = 18;
+    public static final int GET_PREV_SCORE = 19;
 
     public static final int PLAYER_NOT_EXIST = -1;
     public static final int PLAYER_ONLINE = -2;

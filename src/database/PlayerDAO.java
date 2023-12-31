@@ -265,6 +265,7 @@ public class PlayerDAO {
     public static Player getPlayerNameAndScore(int playerId) {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
+        Player player = null;
 
         try {
             String query = "SELECT name,SCORE FROM player WHERE id = ?";
@@ -274,10 +275,7 @@ public class PlayerDAO {
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                return new Player(resultSet.getString("name"), resultSet.getInt("SCORE"));
-
-            } else {
-                return null;
+                player = new Player(playerId, resultSet.getString("name"), resultSet.getInt("SCORE"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -286,6 +284,7 @@ public class PlayerDAO {
             closeResultSet(resultSet);
             closeStatement(preparedStatement);
         }
+        return player;
     }
 
     public static Player getDataOfPlayer(int playerId) {
@@ -370,6 +369,40 @@ public class PlayerDAO {
                 result = resultSet.getInt("score");
             }
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player Score");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return result;
+    }
+
+    public static int getPrevScore(int srcPlayerID, int destPlayerID) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int result = 0;
+
+        try {
+            String query = "SELECT myScore FROM scoreHistory WHERE srcPlayerID = ? and destPlayerID = ?";
+            preparedStatement = Database.connection.prepareStatement(query);
+            preparedStatement.setInt(1, srcPlayerID);
+            preparedStatement.setInt(2, destPlayerID);
+
+            resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                result = resultSet.getInt("score");
+            } else {
+                closeResultSet(resultSet);
+                closeStatement(preparedStatement);
+                query = "INSERT INTO scoreHistory (srcPlayerID, destPlayerID, myScore) VALUES (?, ?, ?)";
+                preparedStatement = Database.connection.prepareStatement(query);
+                preparedStatement.setInt(1, srcPlayerID);
+                preparedStatement.setInt(2, destPlayerID);
+                preparedStatement.setInt(3, 0);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to get player Score");

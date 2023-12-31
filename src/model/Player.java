@@ -41,12 +41,6 @@ public class Player {
         this.password = password;
     }
 
-    public Player(String name, int score) {
-
-        this.name = name;
-        this.score = score;
-    }
-
     public Player(int id, String name, String email, String password, int score, boolean isOnline) {
         this.id = id;
         this.name = name;
