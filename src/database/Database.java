@@ -11,6 +11,7 @@ public class Database {
     public static final String USERNAME = "root";
     public static final String PASSWORD = "root";
 
+
     public static Connection connection;
 
     static {
