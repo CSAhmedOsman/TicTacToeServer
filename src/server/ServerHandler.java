@@ -283,7 +283,7 @@ public class ServerHandler extends Thread {
         ArrayList<Integer> blocked = PlayerDAO.getBlockPlayers(playerId);
         ArrayList<Object> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.BLOCKLIST);
-         System.out.println(" id ="+blocked.get(1) );
+         System.out.println("id ="+blocked.get(1) );
          
         if (!blocked.isEmpty()) {
         for (int id : blocked) {
