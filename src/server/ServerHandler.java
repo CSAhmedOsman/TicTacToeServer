@@ -199,20 +199,17 @@ public class ServerHandler extends Thread {
      * @throws JsonSyntaxException
      */
     private void login() throws JsonSyntaxException {
-        Type playerType = new TypeToken<ArrayList<Player>>() {
+        Type playerType = new TypeToken<Player>() {
         }.getType();
         String playerData = (String) requestData.get(1);
         Gson gson = new Gson();
-        Player currentPlayer = gson.fromJson(playerData, Player.class); //JsonHandler.deserializeArray(playerData, playerType);
-
+        Player currentPlayer = gson.fromJson(playerData, playerType); //JsonHandler.deserializeArray(playerData, playerType);
         int authenticatePlayerId = PlayerDAO.authenticatePlayer(currentPlayer);
-
         if (authenticatePlayerId != Constants.PLAYER_NOT_EXIST) {
             playerId = authenticatePlayerId;
         }
-
         if (PlayerDAO.isOnline(authenticatePlayerId)) {
-            //  authenticatePlayerId = Constants.PLAYER_ONLINE;
+            authenticatePlayerId = Constants.PLAYER_ONLINE;
         }
 
         String gsonResponse = JsonHandler.serializeJson(Constants.LOGIN, authenticatePlayerId);
