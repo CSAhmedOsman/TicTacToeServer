@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import database.Database;
 import util.JsonHandler;
@@ -113,9 +114,6 @@ public class ServerHandler extends Thread {
             case Constants.GET_AVAILIABLE_PLAYERS:
                 getAvailablePlayers();
                 break;
-            case Constants.REQUEST:
-                request();
-                break;
             case Constants.SENDMESSAGE:
                 sendMessage();
                 break;
@@ -158,8 +156,28 @@ public class ServerHandler extends Thread {
             case Constants.ONLINE:
                 makePlayerOnline();
                 break;
+            case Constants.BLOCKLIST:
+                getBlockPlayers();
+                break;
+            case Constants.LOGOUT:
+                logout();
+                break;
         }
     }
+    
+    private void logout() {
+        double playerID = (double) requestData.get(1);
+        
+        boolean isLogout = PlayerDAO.logoutPlayer((int)playerID);
+
+        ArrayList jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.LOGOUT);
+        jsonResponse.add(isLogout);
+
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);
+    }
+
 
     private void register() throws JsonSyntaxException {
         Type playerType = new TypeToken<Player>() {
@@ -198,16 +216,16 @@ public class ServerHandler extends Thread {
 
     private void getData() {
         double playerID = (double) requestData.get(1);
+
         Player player = PlayerDAO.getDataOfPlayer((int) playerID);
-        System.out.println("player Data :" + player.getEmail() + " " + player.getName() + " " + player.getPassword());
+        
         ArrayList<Object> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.SETDATAOFPLAYER);
 
         jsonResponse.add(player.getName());
         jsonResponse.add(player.getEmail());
-        jsonResponse.add(player.getPassword());
-        System.out.println("player Data :" + player.getEmail() + " " + player.getName() + " " + player.getPassword());
-
+        jsonResponse.add(player.getScore());
+       
         String gsonRequest = gson.toJson(jsonResponse);
         out.println(gsonRequest);
     }
@@ -221,14 +239,65 @@ public class ServerHandler extends Thread {
     }
 
     private void getAvailablePlayers() {
-        ArrayList<Player> players = PlayerDAO.getAvailablePlayers();
 
-        String gsonResponse = JsonHandler.serializeJson(Constants.GET_AVAILIABLE_PLAYERS,
-                gson.toJson(players));
-        out.println(gsonResponse);
+        double playerID = (double) requestData.get(1);
+        System.out.println("getAvailablePlayers from server");
+        ArrayList<Player> players = PlayerDAO.getAvailablePlayers((int)playerID);
+        ArrayList<Object> jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.GET_AVAILIABLE_PLAYERS);
+
+        for (Player player : players) {
+            if( isFriend(player.getId())){
+            jsonResponse.add("true");
+            }
+            else{
+                jsonResponse.add("false");
+            }
+            jsonResponse.add((double) player.getId());
+            jsonResponse.add(player.getName());
+            jsonResponse.add((double) player.getScore());
+            System.out.println("player Data :" + player.getId() + " " + player.getName() + " " + player.getScore());
+        
+        }
+
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);
     }
+    
+    private boolean isFriend(int friendId) {
+    List<Player> friends = PlayerDAO.getFriends(playerId);
+    for (Player friend : friends) {
+        if (friend.getId() == friendId) {
+            return true;
+        }
+    }
+    return false;
+}
+    
+    private void getBlockPlayers() {
+        System.out.println("getBlockPlayers from server");
+        ArrayList<Integer> blocked = PlayerDAO.getBlockPlayers(playerId);
+        ArrayList<Object> jsonResponse = new ArrayList();
+        jsonResponse.add(Constants.BLOCKLIST);
+         System.out.println(" id ="+blocked.get(1) );
+         
+        if (!blocked.isEmpty()) {
+        for (int id : blocked) {
+            Player p = PlayerDAO.getPlayerNameAndScore(id);
+            System.out.println("player Data :" + id + " " + p.getName() + " " + p.getScore());
+            jsonResponse.add((double) id);
+            jsonResponse.add(p.getName());
+            jsonResponse.add((double) p.getScore());
+        }
+    }
+         if (!jsonResponse.isEmpty()) {
+        String gsonRequest = gson.toJson(jsonResponse);
+        out.println(gsonRequest);}
+    }
+   
+   
 
-    private void sendBroadcastMessage() {
+ private void sendBroadcastMessage() {
         double sourceId = (double) requestData.get(1);
         String broadCastMessage = (String) requestData.get(2);
 
@@ -241,17 +310,7 @@ public class ServerHandler extends Thread {
         });
     }
 
-    private void request() {
-        double srcId = (double) requestData.get(1);
-        double destinationId = (double) requestData.get(2);
-        ServerHandler serverHandler = getDestinationSocket((int) destinationId);
-        Player p = PlayerDAO.getPlayerNameAndScore((int) srcId);
-
-        String gsonResponse = JsonHandler.serializeJson(Constants.REQUEST, srcId, p.getName(), p.getScore());
-
-        serverHandler.out.println(gsonResponse);
-    }
-
+    
     private void sendMessage() {
         Message message = gson.fromJson(gson.toJson(requestData.get(1)), Message.class);
 

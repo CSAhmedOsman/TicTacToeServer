@@ -28,10 +28,10 @@ public class Player {
         this.email = email;
         this.password = password;
     }
-    public Player(String name,String email, String password) {
+    public Player(String name, String email, int score) {
         this.name = name;
         this.email = email;
-        this.password = password;
+        this.score = score;
     }
 
     public Player(int id, String name, String email, String password) {

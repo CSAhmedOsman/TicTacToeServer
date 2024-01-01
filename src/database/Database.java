@@ -8,8 +8,8 @@ public class Database {
 
     public static final String DB_NAME= "TicTacToeDB";
     private static final String JDBC_URL = "jdbc:derby://localhost:1527/TicTacToeDB";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
+    public static final String USERNAME = "root";
+    public static final String PASSWORD = "root";
 
     public static Connection connection;
 

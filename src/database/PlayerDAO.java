@@ -5,10 +5,13 @@
  */
 package database;
 
+import static database.Database.getConnection;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.Player;
@@ -121,17 +124,30 @@ public class PlayerDAO {
         return rowsAffected > 0;
     }
 
-    public static ArrayList<Player> getAvailablePlayers() {
+   public static ArrayList<Player> getAvailablePlayers(int playerId) {
+        
         PreparedStatement preparedStatement = null;
         ArrayList<Player> players = new ArrayList<>();
         ResultSet rs = null;
 
         try {
+
             preparedStatement = Database.connection.prepareStatement(
-                    "SELECT id, NAME, SCORE FROM PLAYER WHERE ISAVAILABLE = true",
+                    "SELECT p.NAME, p.SCORE, p.id FROM player p WHERE p.id <> ? AND NOT EXISTS (\n"
+                    + "    SELECT 1 FROM blocks b WHERE (b.player_id = ? AND b.blocked_id = p.id) OR (b.player_id = p.id AND b.blocked_id = ?) )\n"
+                    + "ORDER BY CASE WHEN p.ISAVAILABLE AND EXISTS (\n"
+                    + "      SELECT 1 FROM friends f WHERE (f.player_id = ? AND f.friend_id = p.id) ) THEN 1 ELSE 0 END DESC, p.ISAVAILABLE DESC, ( SELECT COUNT(*) FROM friends f WHERE (f.player_id = ? AND f.friend_id = p.id) OR (f.player_id = p.id AND f.friend_id = ?) ) DESC, p.score DESC",
+                    //"SELECT NAME, SCORE, id FROM player WHERE ISAVAILABLE = true AND ISONLINE = true",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY
             );
+
+            preparedStatement.setInt(1, playerId);
+            preparedStatement.setInt(2, playerId);
+            preparedStatement.setInt(3, playerId);
+            preparedStatement.setInt(4, playerId);
+            preparedStatement.setInt(5, playerId);
+            preparedStatement.setInt(6, playerId);
 
             rs = preparedStatement.executeQuery();
 
@@ -162,6 +178,43 @@ public class PlayerDAO {
         return players;
     }
 
+    public static ArrayList<Integer> getBlockPlayers(int playerId) {
+        
+        PreparedStatement preparedStatement = null;
+        ArrayList<Integer> Blocked = new ArrayList<>();
+        ResultSet rs = null;
+
+        try {
+            preparedStatement = Database.connection.prepareStatement(
+                    "SELECT blocked_id FROM blocks WHERE is_Blocked= true AND player_id=?",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY
+            );
+
+            preparedStatement.setInt(1, playerId);
+            rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("blocked_id");
+                Blocked.add(id);
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return Blocked;
+    }
     public static String getPlayerName(int playerId) {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
@@ -188,10 +241,15 @@ public class PlayerDAO {
     }
 
     public static boolean addFriend(int playerId, int friendId) {
-        boolean isFriend = false;
-        try (PreparedStatement statement
-                = Database.connection.prepareStatement("INSERT INTO friends (player_id, friend_id) VALUES (?, ?)")) {
+       
 
+        if (areFriends(playerId, friendId)) {
+
+            return false;
+        }
+
+        boolean isFriend = false;
+        try (PreparedStatement statement = Database.connection.prepareStatement("INSERT INTO FRIENDS (player_id, friend_id) VALUES (?, ?)")) {
             statement.setInt(1, playerId);
             statement.setInt(2, friendId);
 
@@ -205,6 +263,68 @@ public class PlayerDAO {
         return isFriend;
     }
 
+    private static boolean areFriends(int playerId, int friendId) {
+        try (PreparedStatement statement = Database.connection.prepareStatement(
+                "SELECT 1 FROM FRIENDS WHERE (player_id = ? AND friend_id = ?) OR (player_id = ? AND friend_id = ?)")) {
+            statement.setInt(1, playerId);
+            statement.setInt(2, friendId);
+            statement.setInt(3, friendId);
+            statement.setInt(4, playerId);
+
+            ResultSet resultSet = statement.executeQuery();
+            return resultSet.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+     public static List<Player> getFriends(int playerId) {
+       
+        PreparedStatement preparedStatement = null;
+        ResultSet rs = null;
+        List<Player> friends = new ArrayList<>();
+
+        try {
+            preparedStatement = Database.connection.prepareStatement(
+                    "SELECT p.NAME, p.SCORE, p.id FROM player p "
+                    + "INNER JOIN friends f ON (p.id = f.friend_id AND f.player_id = ?) OR (p.id = f.player_id AND f.friend_id = ?)"
+            );
+            preparedStatement.setInt(1, playerId);
+            preparedStatement.setInt(2, playerId);
+
+            rs = preparedStatement.executeQuery();
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("NAME");
+                int score = rs.getInt("SCORE");
+
+                Player friend = new Player(id, name, score);
+                friends.add(friend);
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } finally {
+            closeResources(rs, preparedStatement);
+        }
+
+        return friends;
+    }
+
+private static void closeResources(ResultSet rs, PreparedStatement preparedStatement) {
+        try {
+            if (rs != null) {
+                rs.close();
+            }
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
     public static boolean removeFriend(int playerId, int friendId) {
         boolean isNotFriend = false;
         try (PreparedStatement statement = Database.connection.prepareStatement("DELETE FROM friends WHERE (player_id = ? AND friend_id = ?)")) {
@@ -222,10 +342,11 @@ public class PlayerDAO {
         return isNotFriend;
     }
 
-    public static boolean blockPlayer(int playerId, int blockedId) {
+     public static boolean blockPlayer(int playerId, int blockedId) {
+        
         boolean isBlocked = false;
         try (PreparedStatement statement
-                = Database.connection.prepareStatement("INSERT INTO blocks (player_id, blocked_id) VALUES (?, ?), (?, ?)")) {
+                = Database.connection.prepareStatement("INSERT INTO blocks (player_id, blocked_id, is_blocked) VALUES (?, ?, true), (?, ?, true)")) {
 
             statement.setInt(1, playerId);
             statement.setInt(2, blockedId);
@@ -241,8 +362,8 @@ public class PlayerDAO {
         }
         return isBlocked;
     }
-
     public static boolean unBlockPlayer(int playerId, int unblockedId) {
+       
         boolean isUnBlocked = false;
         try (PreparedStatement statement
                 = Database.connection.prepareStatement("DELETE FROM blocks WHERE (player_id = ? AND blocked_id = ?) OR (player_id = ? AND blocked_id = ?)")) {
@@ -261,6 +382,7 @@ public class PlayerDAO {
         }
         return isUnBlocked;
     }
+
 
     public static Player getPlayerNameAndScore(int playerId) {
         PreparedStatement preparedStatement = null;
@@ -288,20 +410,21 @@ public class PlayerDAO {
         }
     }
 
-    public static Player getDataOfPlayer(int playerId) {
+   public static Player getDataOfPlayer(int playerId) {
+        
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         Player player = null;
 
         try {
-            String query = "SELECT name, email, password FROM PLAYER WHERE id = ?";
+            String query = "SELECT  name, email, SCORE FROM PLAYER WHERE id = ?";
             preparedStatement = Database.connection.prepareStatement(query);
             preparedStatement.setInt(1, playerId);
 
             resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
-                player = new Player(resultSet.getString("name"), resultSet.getString("email"), resultSet.getString("password"));
+                player = new Player(resultSet.getString("name"), resultSet.getString("email"), resultSet.getInt("SCORE"));
 
             }
         } catch (SQLException e) {
@@ -427,6 +550,32 @@ public class PlayerDAO {
         }
     }
 
+    public static boolean logoutPlayer(int playerId) {
+       
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        int rowsUpdated = 0;
+        try {
+            String query = "UPDATE player SET isAvailable = false,ISONLINE = false WHERE id = ?";
+            preparedStatement = Database.connection.prepareStatement(query);
+            preparedStatement.setInt(1, playerId);
+            rowsUpdated = preparedStatement.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("Update successful.");
+            } else {
+                System.out.println("No rows were updated.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to get player id");
+        } finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return rowsUpdated > 0;
+    }
+
     private static void closeResultSet(ResultSet resultSet) {
         if (resultSet != null) {
             try {
@@ -447,3 +596,5 @@ public class PlayerDAO {
         }
     }
 }
+
+  
