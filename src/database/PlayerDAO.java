@@ -75,7 +75,7 @@ public class PlayerDAO {
         }
     }
 
-    public static void makePlayerOnline(int authenticateId) {
+    public static void setOnlineStatus(int authenticateId) {
         PreparedStatement preparedStatement = null;
 
         try {
