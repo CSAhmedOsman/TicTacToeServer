@@ -30,5 +30,7 @@ public class Constants {
     public static final int ONLINE= 16;  
     public static final int SETDATAOFPLAYER= 17;
     public static final int UPDATEUSERPROFILE= 18;
+    public static final int BLOCKLIST= 19;
+    public static final int LOGOUT=20;
 
 }
