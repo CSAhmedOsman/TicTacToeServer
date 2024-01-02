@@ -124,11 +124,10 @@ public class PlayerDAO {
         ResultSet rs = null;
         try {
             preparedStatement = Database.connection.prepareStatement(
-                    "SELECT p.NAME, p.SCORE, p.id FROM player p WHERE p.id <> ? AND NOT EXISTS (\n"
+                    "SELECT p.NAME, p.SCORE, p.id FROM player p WHERE p.id <> ? and p.ISAVAILABLE = true AND p.ISONLINE = true AND NOT EXISTS (\n"
                     + "    SELECT 1 FROM blocks b WHERE (b.player_id = ? AND b.blocked_id = p.id) OR (b.player_id = p.id AND b.blocked_id = ?) )\n"
                     + "ORDER BY CASE WHEN p.ISAVAILABLE AND EXISTS (\n"
                     + "      SELECT 1 FROM friends f WHERE (f.player_id = ? AND f.friend_id = p.id) ) THEN 1 ELSE 0 END DESC, p.ISAVAILABLE DESC, ( SELECT COUNT(*) FROM friends f WHERE (f.player_id = ? AND f.friend_id = p.id) OR (f.player_id = p.id AND f.friend_id = ?) ) DESC, p.score DESC",
-                    //"SELECT NAME, SCORE, id FROM player WHERE ISAVAILABLE = true AND ISONLINE = true",
                     ResultSet.TYPE_SCROLL_INSENSITIVE,
                     ResultSet.CONCUR_READ_ONLY
             );
