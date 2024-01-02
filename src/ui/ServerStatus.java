@@ -12,8 +12,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Cursor;
@@ -37,7 +35,6 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.apache.derby.jdbc.ClientDriver;
 import server.Server;
-import static database.Database.connection;
 
 /**
  *
@@ -485,22 +482,12 @@ public class ServerStatus extends AnchorPane {
                 try {
                     Thread.sleep(10000); // Sleep for 10 seconds
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.");
                     Thread.currentThread().stop();
                 }
                 // After 30 seconds, enable the button on the JavaFX Application Thread
                 Platform.runLater(() -> btnRefresh.setDisable(false));
             }).start();
-        });
-        btnLogOut.setOnAction((event) -> {
-            try {
-                disconnectFromSQL(connection);
-                myServer.close();
-                th.stop();
-                navigateToNextScene();
-            } catch (SQLException ex) {
-                Logger.getLogger(ServerStatus.class.getName()).log(Level.SEVERE, null, ex);
-            }
         });
     }
 

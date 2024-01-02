@@ -14,25 +14,17 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import model.Player;
 import util.Constants;
-import model.Message;
 import database.PlayerDAO;
 import java.lang.reflect.Type;
 import java.util.Vector;
 
 import model.Message;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import database.Database;
+import javafx.scene.control.Alert;
 import util.JsonHandler;
+import util.Util;
 
 /**
  *
@@ -67,7 +59,7 @@ public class ServerHandler extends Thread {
             out = new PrintStream(socket1.getOutputStream());
             PLAYERS_SOCKET.add(this);
         } catch (IOException e) {
-            e.printStackTrace();
+                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While open the Socket Connection");
         }
     }
 
@@ -86,14 +78,14 @@ public class ServerHandler extends Thread {
             }
         } catch (IOException ex) {
             try {
+                PlayerDAO.logoutPlayer(playerId);
                 out.close();
                 in.close();
                 socket.close();
                 isRunning = false;
                 PLAYERS_SOCKET.remove(this);
-
-            } catch (IOException ex1) {
-                Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex1);
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
             }
         }
     }
@@ -495,7 +487,7 @@ public class ServerHandler extends Thread {
                 serverHandler.socket.close();
             }
         } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                System.err.println(ex.getMessage());
         }
     }
 

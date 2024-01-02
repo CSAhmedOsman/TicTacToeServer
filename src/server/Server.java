@@ -8,8 +8,8 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javafx.scene.control.Alert;
+import util.Util;
 
 /**
  *
@@ -56,7 +56,7 @@ public class Server implements Runnable {
                 isRunning = false;
                 myServerSocket.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While Running the Socket Connection");
             }
         }
     }
@@ -67,7 +67,7 @@ public class Server implements Runnable {
             myServerSocket.close();
             isRunning = false;
         } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While closeing the Socket Connection");
         }
     }
 

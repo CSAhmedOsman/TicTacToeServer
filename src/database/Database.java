@@ -3,6 +3,8 @@ package database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import javafx.scene.control.Alert;
+import util.Util;
 
 public class Database {
 
@@ -31,16 +33,14 @@ public class Database {
         return connection;
     }
 
-    // محدش يناديها علشان بتزعل وهتزعلنا
     public static void closeConnection() {
         if (connection != null) {
             try {
                 if (!connection.isClosed()) {
                     connection.close();
                 }
-                System.out.println("Connection closed");
             } catch (SQLException e) {
-                e.printStackTrace();
+                Util.showDialog(Alert.AlertType.ERROR, "close Connection Error", "Error While close Database Connection");
             } finally {
                 connection = null;
             }
