@@ -26,44 +26,24 @@ import strategy.*;
  */
 public class ServerHandler extends Thread {
 
-    private final Map<Integer, RequestHandlerStrategy> strategies = new HashMap<>();
-    private boolean isRunning = true;
+    private final RequestStrategyManager strategyManager;
+    private boolean isRunning= true;
     private Socket socket;
     private DataInputStream in;
     public PrintStream out;
     public int playerId;
     public ArrayList<String> requestData;
 
+    {
+        strategyManager = new RequestStrategyManager();
+    }
+    
     public ServerHandler(Socket socket) {
         makeNewSocket(socket);
-        populateStrategies();
+        strategyManager.populateStrategies();
         start();
     }
 
-    private void populateStrategies() {
-            strategies.put(Constants.REGISTER, new RegisterStrategy());
-            strategies.put(Constants.LOGIN, new LoginStrategy());
-            strategies.put(Constants.GET_AVAILIABLE_PLAYERS, new GetAvailableStrategy());
-            strategies.put(Constants.SEND_MESSAGE, new SendMessageStrategy());
-            strategies.put(Constants.BROADCAST_MESSAGE, new SendBroadcastStrategy());
-            strategies.put(Constants.GET_DATA_OF_PLAYER, new GetDataStrategy());
-            strategies.put(Constants.UPDATE_USER_PROFILE, new UpdateProfileStrategy());
-            strategies.put(Constants.SEND_INVITE, new SendInviteStrategy());
-            strategies.put(Constants.ACCEPT_GAME, new AcceptGameStrategy());
-            strategies.put(Constants.SEND_MOVE, new SendMoveStrategy());
-            strategies.put(Constants.UPDATE_SCORE, new UpdateScoreStrategy());
-            strategies.put(Constants.EXIT_GAME, new ExitGameStrategy());
-            strategies.put(Constants.ADD_FRIEND, new AddFriendStrategy());
-            strategies.put(Constants.REMOVE_FRIEND, new RemoveFriendStrategy());
-            strategies.put(Constants.BLOCK_PLAYER, new BlockPlayerStrategy());
-            strategies.put(Constants.UN_BLOCK_PLAYER, new UnblockPlayerStrategy());
-            strategies.put(Constants.ONLINE, new MakeOnlineStrategy());
-    }
-    
-    public void setRequestStrategy(int key, RequestHandlerStrategy requestStrategy) {
-        strategies.put(key, requestStrategy);
-    }
-    
     private void makeNewSocket(Socket socket) {
         try {
             this.socket = socket;
@@ -95,11 +75,12 @@ public class ServerHandler extends Thread {
     }
 
     private void handleRequest(String gsonRequest) {
-        Type listType = new TypeToken<ArrayList<String>>() {}.getType();
+        Type listType = new TypeToken<ArrayList<String>>() {
+        }.getType();
         requestData = JsonHandler.deserializeArray(gsonRequest, listType);
 
         int action = Integer.valueOf(requestData.get(0));
-        RequestHandlerStrategy request = strategies.get(action);
+        RequestHandlerStrategy request = strategyManager.getRequestStrategy(action);
         if (request != null) {
             request.handleRequest(this);
         }

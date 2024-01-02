@@ -8,7 +8,7 @@ package strategy;
 import com.google.gson.reflect.TypeToken;
 import database.PlayerDAO;
 import java.lang.reflect.Type;
-import model.GameInfo;
+import dto.GameInfo;
 import server.ServerHandler;
 import util.JsonHandler;
 

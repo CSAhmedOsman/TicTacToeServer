@@ -9,7 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import database.PlayerDAO;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import model.Player;
+import dto.Player;
 import server.ServerHandler;
 import util.Constants;
 import util.JsonHandler;

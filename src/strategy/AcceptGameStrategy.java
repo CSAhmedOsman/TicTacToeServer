@@ -6,7 +6,7 @@
 package strategy;
 
 import database.PlayerDAO;
-import model.GameInfo;
+import dto.GameInfo;
 import server.ServerHandler;
 import util.Constants;
 import util.JsonHandler;
