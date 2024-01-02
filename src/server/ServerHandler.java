@@ -230,15 +230,10 @@ public class ServerHandler extends Thread {
 
     public void updateUserProfile() {
         Player currentplayer = gson.fromJson(gson.toJson(requestData.get(1)), Player.class);
-
-        if (PlayerDAO.updateUserProfile(currentplayer)) {
-            System.out.println("update User Profile");
-        }
     }
 
     private void getAvailablePlayers() {
         double playerID = (double) requestData.get(1);
-        System.out.println("getAvailablePlayers from server");
         ArrayList<Player> players = PlayerDAO.getAvailablePlayers((int) playerID);
         ArrayList<Object> jsonResponse = new ArrayList();
         jsonResponse.add(Constants.GET_AVAILIABLE_PLAYERS);
@@ -252,8 +247,6 @@ public class ServerHandler extends Thread {
             jsonResponse.add((double) player.getId());
             jsonResponse.add(player.getName());
             jsonResponse.add((double) player.getScore());
-            System.out.println("player Data :" + player.getId() + " " + player.getName() + " " + player.getScore());
-
         }
 
         String gsonRequest = gson.toJson(jsonResponse);
