@@ -8,9 +8,8 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import util.Constants;
+import javafx.scene.control.Alert;
+import util.Util;
 
 /**
  *
@@ -21,23 +20,28 @@ public class Server implements Runnable {
     ServerSocket myServerSocket;
     Thread thread;
     boolean isRunning;
+    private static Server singletonServer;
+    public static final int PORT_NUMBER= 5005;
+    
     {
-        isRunning= true;
+        isRunning = true;
     }
     
-    public Server() {
-        startConnection();
+    private Server() {
     }
 
-    private void startConnection() {
-        try {
-            myServerSocket = new ServerSocket(Constants.PORT_NUMBER);
-
-            thread= new Thread(this);
-            thread.start();
-        } catch (IOException e) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
+    public static Server getServer() throws IOException {
+        if (singletonServer == null) {
+            singletonServer = new Server();
+            singletonServer.startConnection();
         }
+        return singletonServer;
+    }
+
+    private void startConnection() throws IOException {
+        myServerSocket = new ServerSocket(PORT_NUMBER);
+        thread = new Thread(this);
+        thread.start();
     }
 
     @Override
@@ -49,15 +53,32 @@ public class Server implements Runnable {
             }
         } catch (IOException e) {
             try {
-                isRunning= false;
+                isRunning = false;
                 myServerSocket.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While Running the Socket Connection");
             }
         }
     }
-    
-    public static void main(String[] args) {
-        new Server();
+
+    public void close() {
+        try {
+            ServerHandler.closeSockets();
+            myServerSocket.close();
+            isRunning = false;
+        } catch (IOException ex) {
+                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While closeing the Socket Connection");
+        }
+    }
+
+    public void connect() throws IOException {
+        if (isRunning == false) {
+            startConnection();
+            isRunning = true;
+        }
+    }
+
+    public boolean isRunning() {
+        return isRunning;
     }
 }
