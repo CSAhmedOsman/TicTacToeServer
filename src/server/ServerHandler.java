@@ -59,7 +59,7 @@ public class ServerHandler extends Thread {
             out = new PrintStream(socket1.getOutputStream());
             PLAYERS_SOCKET.add(this);
         } catch (IOException e) {
-                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While open the Socket Connection");
+            Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While open the Socket Connection");
         }
     }
 
@@ -199,9 +199,10 @@ public class ServerHandler extends Thread {
         if (authenticatePlayerId != Constants.PLAYER_NOT_EXIST) {
             playerId = authenticatePlayerId;
         }
+        /*
         if (PlayerDAO.isOnline(authenticatePlayerId)) {
             authenticatePlayerId = Constants.PLAYER_ONLINE;
-        }
+        }*/
 
         String gsonResponse = JsonHandler.serializeJson(Constants.LOGIN, authenticatePlayerId);
         out.println(gsonResponse);
@@ -382,7 +383,7 @@ public class ServerHandler extends Thread {
         String gsonRequest1 = gson.toJson(jsonPlayer1);
         destinationSocket.out.println(gsonRequest1);
 
-        info = new GameInfo(player1Name, player2Name, srcId, destId, player1Score, player2Score);
+        info = new GameInfo(player2Name, player1Name, srcId, destId, player1Score, player2Score);
 
         ArrayList<Object> jsonPlayer2 = new ArrayList<>();
         jsonPlayer2.add(Constants.ACCEPT_INVITE);
@@ -474,12 +475,13 @@ public class ServerHandler extends Thread {
     public static void closeSockets() {
         try {
             for (ServerHandler serverHandler : PLAYERS_SOCKET) {
+                PlayerDAO.logoutPlayer(serverHandler.playerId);
                 serverHandler.in.close();
                 serverHandler.out.close();
                 serverHandler.socket.close();
             }
         } catch (IOException ex) {
-                System.err.println(ex.getMessage());
+            System.err.println(ex.getMessage());
         }
     }
 
