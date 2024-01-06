@@ -6,6 +6,8 @@
 package util;
 
 import javafx.application.Platform;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 
 /**
@@ -13,7 +15,10 @@ import javafx.scene.control.Alert;
  * @author w
  */
 public class Util {
-    
+
+    private static double xOffset;
+    private static double yOffset;
+
     public static void showDialog(Alert.AlertType type, String title, String content) {
         Platform.runLater(() -> {
             Alert a = new Alert(type);
@@ -24,4 +29,24 @@ public class Util {
             a.showAndWait();
         });
     }
+
+    public static void displayScreen(Parent root) {
+
+        Scene scene = new Scene(root);
+        Platform.runLater(() -> {
+            ui.ServerApp.stage.setScene(scene);
+            ui.ServerApp.stage.show();
+
+            root.setOnMousePressed(event -> {
+                xOffset = event.getSceneX();
+                yOffset = event.getSceneY();
+            });
+
+            root.setOnMouseDragged(event -> {
+                ui.ServerApp.stage.setX(event.getScreenX() - xOffset);
+                ui.ServerApp.stage.setY(event.getScreenY() - yOffset);
+            });
+        });
+    }
+
 }

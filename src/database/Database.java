@@ -10,8 +10,8 @@ public class Database {
 
     public static final String DB_NAME = "TicTacToeDB";
     private static final String JDBC_URL = "jdbc:derby://localhost:1527/TicTacToeDB";
-    public static final String USERNAME = "root";
-    public static final String PASSWORD = "root";
+    public static String USERNAME;
+    public static String PASSWORD;
 
     public static Connection connection;
 
@@ -24,10 +24,20 @@ public class Database {
     private Database() {
     }
 
-    public static Connection getConnection(String username, String password) throws ClassNotFoundException, SQLException {
+    public static Connection startConnection(String username, String password) throws ClassNotFoundException, SQLException {
+        USERNAME = username;
+        PASSWORD = password;
         if (connection == null) {
             Class.forName("org.apache.derby.jdbc.ClientDriver");
             connection = DriverManager.getConnection(JDBC_URL, username, password);
+        }
+        return connection;
+    }
+
+    public static Connection getConnection() throws ClassNotFoundException, SQLException {
+        if (connection == null) {
+            Class.forName("org.apache.derby.jdbc.ClientDriver");
+            connection = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
         }
         return connection;
     }

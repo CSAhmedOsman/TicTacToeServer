@@ -5,13 +5,15 @@
  */
 package ui;
 
+import database.Database;
 import java.io.IOException;
 import javafx.scene.Scene;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Cursor;
@@ -33,7 +35,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import org.apache.derby.jdbc.ClientDriver;
 import server.Server;
 
 /**
@@ -74,12 +75,10 @@ public class ServerStatus extends AnchorPane {
     protected final BarChart<String, Number> barChart;
     protected boolean isConnected;
     protected Thread th;
-    protected Connection myConnection;
-    protected Connection newConnection;
-    protected Server myServer;
+    protected Server server;
     protected boolean isRunning;
 
-    public ServerStatus(Connection connection, Server server) {
+    public ServerStatus() {
 
         rectangle = new Rectangle();
         label = new Label();
@@ -385,23 +384,21 @@ public class ServerStatus extends AnchorPane {
         getChildren().add(barChart);
 
         //-----------------ahmed + abdelrahman Works--------------------
-        isRunning = true;
-        isConnected = false;
-        myServer = server;
-        myConnection = connection;
-        newConnection = myConnection;
-
         try {
-            if ((connection != null) && (server != null)) {
-                if ((server.isRunning()) && (!connection.isClosed())) {
-                    isConnected = true;
-                    btnSwitch.setText("Off");
-                    btnStatus.setStyle("-fx-background-color: #3bd035; -fx-background-radius: 30;");
-                    btnStatus.setText("Connected");
-                }
-            }
-        } catch (SQLException ex) {
+            isRunning = true;
+            isConnected = false;
+            server = Server.getServer();
+        } catch (IOException ex) {
             Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Error!", "Error while Getting Server Status.\n" + ex.getMessage()));
+        }
+
+        if (server != null) {
+            if (server.isRunning()) {
+                isConnected = true;
+                btnSwitch.setText("Off");
+                btnStatus.setStyle("-fx-background-color: #3bd035; -fx-background-radius: 30;");
+                btnStatus.setText("Connected");
+            }
         }
 
         addListener();
@@ -411,12 +408,10 @@ public class ServerStatus extends AnchorPane {
                 try {
                     Platform.runLater(() -> {
                         if (isConnected) {
-                            updateChartData(getTotalPlayers(newConnection),
-                                    getOnlinePlayers(newConnection),
-                                    getNotAvailableplayers(newConnection));
+                            updateChartData(getTotalPlayers(), getOnlinePlayers(), getNotAvailableplayers());
                         }
                     });
-                    Thread.sleep(6000); // Sleep for 6 seconds (for demonstration)
+                    Thread.sleep(5000); // Sleep for 5 seconds (for demonstration)
                 } catch (InterruptedException ex) {
                     Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconnected!", "The connection to SQL Server has been closed.\n" + ex.getMessage()));
                 }
@@ -433,169 +428,121 @@ public class ServerStatus extends AnchorPane {
         });
 
         btnClose.setOnAction(e -> {
-            try {
-                isRunning = false;
-                if (newConnection != null) {
-                    if (!newConnection.isClosed()) {
-                        newConnection.close();
-                    }
-                }
-                if (myServer != null) {
-                    if (myServer.isRunning()) {
-                        myServer.close();
-                    }
-                }
-            } catch (SQLException ex) {
-                Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Close Error!", "Error while Closing.\n" + ex.getMessage()));
-            }
-            th.stop();
+            close();
             Platform.exit();
         });
 
         btnSwitch.setOnAction((ActionEvent e) -> {
-            newConnection = switchConnection(myConnection);
+            switchConnection();
             updateChartData(0, 0, 0);
         });
 
         btnLogOut.setOnAction((event) -> {
-            try {
-                isRunning = false;
-                disconnectFromSQL(myConnection);
-                myServer.close();
-                th.stop();
-                navigateToNextScene();
-            } catch (SQLException ex) {
-                Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Logout Error!", "Error while Logout.\n" + ex.getMessage()));
-            }
+            close();
+            navigateToNextScene();
         });
 
         btnRefresh.setOnAction((event) -> {
             btnRefresh.setDisable(true); // Disable the button when clicked
-            if (newConnection != null && isConnected) {
-                updateChartData(getTotalPlayers(newConnection),
-                        getOnlinePlayers(newConnection),
-                        getNotAvailableplayers(newConnection));
+            if (isConnected) {
+                updateChartData(getTotalPlayers(), getOnlinePlayers(), getNotAvailableplayers());
             } else {
-                util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.");
+                util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to Server has been closed.");
             }
             new Thread(() -> {
                 try {
                     Thread.sleep(10000); // Sleep for 10 seconds
                 } catch (InterruptedException e) {
                     util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.");
-                    Thread.currentThread().stop();
                 }
-                // After 30 seconds, enable the button on the JavaFX Application Thread
+                // After 10 seconds, enable the button on the JavaFX Application Thread
                 Platform.runLater(() -> btnRefresh.setDisable(false));
             }).start();
         });
     }
 
-    private Connection switchConnection(Connection connection) {
+    private void switchConnection() {
         if (isConnected) {
-            try {
-                th.suspend();
-                myServer.close();
-                disconnectFromSQL(connection);
-                labelError.setText("");
-            } catch (SQLException ex) {
-                labelError.setText("Error while disconnecting DataBase: " + ex.getMessage());
-            }
+            th.suspend();
+            server.close();
+            labelError.setText("");
+            switchBtn();
+            isConnected = false;
         } else {
             try {
-                connection = connectToSQL();
-                myServer.connect();
-                th.resume();
+                server.connect();
                 labelError.setText("");
-                return connection;
+                th.resume();
+                switchBtn();
+                isConnected = true;
             } catch (IOException ex) {
                 labelError.setText("Error while Connecting Server: " + ex.getMessage());
+            }
+        }
+    }
+
+    private int getTotalPlayers() {
+        int playerCount = 0;
+        if (isConnected) {
+            try {
+                String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player";
+
+                Statement statement = Database.connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(countPlayersQuery);
+
+                if (resultSet.next()) {
+                    playerCount = resultSet.getInt("total_players");
+                }
+
+                resultSet.close();
+                statement.close();
             } catch (SQLException ex) {
-                labelError.setText("Error while Connecting Database: " + ex.getMessage());
+                util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
             }
-        }
-        return null;
-    }
-
-    private void disconnectFromSQL(Connection connection) throws SQLException {
-        if (connection != null) {
-            connection.close();
-            isConnected = false;
-            btnSwitch.setText("On");
-            btnStatus.setStyle("-fx-background-color: #ff0000; -fx-background-radius: 30;");
-            btnStatus.setText("Disconnected");
-            labelError.setText("");
-        }
-    }
-
-    private Connection connectToSQL() throws SQLException {
-        Connection connection = null;
-        DriverManager.registerDriver(new ClientDriver());
-        connection = DriverManager.getConnection("jdbc:derby://localhost:1527/TicTacToeDB", "root", "root");
-        isConnected = true;
-        btnSwitch.setText("Off");
-        btnStatus.setStyle("-fx-background-color: #3bd035; -fx-background-radius: 30;");
-        btnStatus.setText("Connected");
-        labelError.setText("");
-        return connection;
-    }
-
-    private int getTotalPlayers(Connection connection) {
-        int playerCount = 0;
-        try {
-            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player";
-
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(countPlayersQuery);
-
-            if (resultSet.next()) {
-                playerCount = resultSet.getInt("total_players");
-            }
-
-            resultSet.close();
-            statement.close();
-        } catch (SQLException ex) {
-            util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
         }
         return playerCount;
     }
 
-    private int getOnlinePlayers(Connection connection) {
+    private int getOnlinePlayers() {
         int playerCount = 0;
-        try {
-            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isOnline = true";
+        if (isConnected) {
+            try {
+                String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isOnline = true";
 
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(countPlayersQuery);
+                Statement statement = Database.connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(countPlayersQuery);
 
-            if (resultSet.next()) {
-                playerCount = resultSet.getInt("total_players");
+                if (resultSet.next()) {
+                    playerCount = resultSet.getInt("total_players");
+                }
+
+                resultSet.close();
+                statement.close();
+            } catch (SQLException ex) {
+                util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
             }
-
-            resultSet.close();
-            statement.close();
-        } catch (SQLException ex) {
-            util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
         }
         return playerCount;
     }
 
-    private int getNotAvailableplayers(Connection connection) {
+    private int getNotAvailableplayers() {
         int playerCount = 0;
-        try {
-            String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isOnline = true and isAvailable = false";
+        if (isConnected) {
+            try {
+                String countPlayersQuery = "SELECT COUNT(*) AS total_players FROM player WHERE isOnline = true and isAvailable = false";
 
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(countPlayersQuery);
+                Statement statement = Database.connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(countPlayersQuery);
 
-            if (resultSet.next()) {
-                playerCount = resultSet.getInt("total_players");
+                if (resultSet.next()) {
+                    playerCount = resultSet.getInt("total_players");
+                }
+
+                resultSet.close();
+                statement.close();
+            } catch (SQLException ex) {
+                util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
             }
-
-            resultSet.close();
-            statement.close();
-        } catch (SQLException ex) {
-            util.Util.showDialog(Alert.AlertType.ERROR, "Server is Disconected!", "The connection to SQL Server has been closed.\n" + ex.getMessage());
         }
         return playerCount;
     }
@@ -619,5 +566,38 @@ public class ServerStatus extends AnchorPane {
         textOPlayer.setText(String.valueOf(onlineUsers));
         playingUsersSeries.getData().get(0).setYValue(playingUsers);
         textAPlayer.setText(String.valueOf(playingUsers));
+    }
+
+    private void switchBtn() {
+        if (isConnected) {
+            btnSwitch.setText("On");
+            btnStatus.setStyle("-fx-background-color: #ff0000; -fx-background-radius: 30;");
+            btnStatus.setText("Disconnected");
+            labelError.setText("");
+        } else {
+            btnSwitch.setText("Off");
+            btnStatus.setStyle("-fx-background-color: #3bd035; -fx-background-radius: 30;");
+            btnStatus.setText("Connected");
+            labelError.setText("");
+        }
+    }
+
+    private void close() {
+        try {
+            isRunning = false;
+            if (Database.connection != null) {
+                if (!Database.connection.isClosed()) {
+                    Database.connection.close();
+                }
+            }
+            if (server != null) {
+                if (server.isRunning()) {
+                    server.close();
+                }
+            }
+        } catch (SQLException ex) {
+            Platform.runLater(() -> util.Util.showDialog(Alert.AlertType.ERROR, "Close Conniction Error!", "Error while Closing the Conniction.\n" + ex.getMessage()));
+        }
+        th.stop();
     }
 }

@@ -18,10 +18,13 @@ import model.Player;
 import util.Constants;
 import database.PlayerDAO;
 import java.lang.reflect.Type;
+import java.util.Iterator;
 import java.util.Vector;
 
 import model.Message;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.control.Alert;
 import util.JsonHandler;
 import util.Util;
@@ -72,21 +75,14 @@ public class ServerHandler extends Thread {
         try {
             while (isRunning) {
                 String gsonRequest = in.readLine();
-                if (!gsonRequest.isEmpty()) {
+                if (gsonRequest != null && !gsonRequest.isEmpty()) {
                     handleRequest(gsonRequest);
+                } else {
+                    close();
                 }
             }
         } catch (IOException ex) {
-            try {
-                PlayerDAO.logoutPlayer(playerId);
-                out.close();
-                in.close();
-                socket.close();
-                isRunning = false;
-                PLAYERS_SOCKET.remove(this);
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
-            }
+            close();
         }
     }
 
@@ -171,6 +167,7 @@ public class ServerHandler extends Thread {
 
         String gsonRequest = gson.toJson(jsonResponse);
         out.println(gsonRequest);
+        close();
     }
 
     private void register() throws JsonSyntaxException {
@@ -303,11 +300,10 @@ public class ServerHandler extends Thread {
 
         ServerHandler destinationSocket = getDestinationSocket(message.getDestinationId());
         String srcPlayerName = PlayerDAO.getPlayerName(message.getSourceId());
-
-        String gsonRequest = JsonHandler.serializeJson(Constants.SEND_MESSAGE,
-                message.getMessage(), srcPlayerName);
-
-        destinationSocket.out.println(gsonRequest);
+        if (destinationSocket != null && !destinationSocket.isInterrupted()) {
+            String gsonRequest = JsonHandler.serializeJson(Constants.SEND_MESSAGE, message.getMessage(), srcPlayerName);
+            destinationSocket.out.println(gsonRequest);
+        }
     }
 
     private ServerHandler getDestinationSocket(int destinationId) {
@@ -372,26 +368,32 @@ public class ServerHandler extends Thread {
         int player1Score = PlayerDAO.getPlayerScore(srcId);
         int player2Score = PlayerDAO.getPlayerScore(destId);
 
-        GameInfo info = new GameInfo(player2Name, player1Name, destId, srcId, player2Score, player1Score);
+        GameInfo info;
+        if (destinationSocket != null && !destinationSocket.isInterrupted()) {
 
-        ArrayList<Object> jsonPlayer1 = new ArrayList<>();
-        jsonPlayer1.add(Constants.ACCEPT_INVITE);
-        jsonPlayer1.add(gson.toJson(info));
-        jsonPlayer1.add(true);
-        jsonPlayer1.add(type);
+            info = new GameInfo(player2Name, player1Name, destId, srcId, player2Score, player1Score);
 
-        String gsonRequest1 = gson.toJson(jsonPlayer1);
-        destinationSocket.out.println(gsonRequest1);
+            ArrayList<Object> jsonPlayer1 = new ArrayList<>();
+            jsonPlayer1.add(Constants.ACCEPT_INVITE);
+            jsonPlayer1.add(gson.toJson(info));
+            jsonPlayer1.add(true);
+            jsonPlayer1.add(type);
 
-        info = new GameInfo(player2Name, player1Name, srcId, destId, player1Score, player2Score);
+            String gsonRequest1 = gson.toJson(jsonPlayer1);
+            destinationSocket.out.println(gsonRequest1);
+        }
+        if (sourceSocket != null && !sourceSocket.isInterrupted()) {
 
-        ArrayList<Object> jsonPlayer2 = new ArrayList<>();
-        jsonPlayer2.add(Constants.ACCEPT_INVITE);
-        jsonPlayer2.add(gson.toJson(info));
-        jsonPlayer2.add(false);
-        jsonPlayer2.add(type);
-        String gsonRequest2 = gson.toJson(jsonPlayer2);
-        sourceSocket.out.println(gsonRequest2);
+            info = new GameInfo(player1Name, player2Name, srcId, destId, player1Score, player2Score);
+
+            ArrayList<Object> jsonPlayer2 = new ArrayList<>();
+            jsonPlayer2.add(Constants.ACCEPT_INVITE);
+            jsonPlayer2.add(gson.toJson(info));
+            jsonPlayer2.add(false);
+            jsonPlayer2.add(type);
+            String gsonRequest2 = gson.toJson(jsonPlayer2);
+            sourceSocket.out.println(gsonRequest2);
+        }
     }
 
     private void gameHandler() {
@@ -401,14 +403,16 @@ public class ServerHandler extends Thread {
         double destPlayerId = (double) requestData.get(4);
 
         ServerHandler destinationSocket = getDestinationSocket((int) destPlayerId);
+        if (destinationSocket != null && !destinationSocket.isInterrupted()) {
 
-        ArrayList<Object> jsonArr = new ArrayList<>();
-        jsonArr.add(Constants.SEND_MOVE);
-        jsonArr.add(playable);
-        jsonArr.add((int) x);
-        jsonArr.add((int) y);
-        String gsonRequest = gson.toJson(jsonArr);
-        destinationSocket.out.println(gsonRequest);
+            ArrayList<Object> jsonArr = new ArrayList<>();
+            jsonArr.add(Constants.SEND_MOVE);
+            jsonArr.add(playable);
+            jsonArr.add((int) x);
+            jsonArr.add((int) y);
+            String gsonRequest = gson.toJson(jsonArr);
+            destinationSocket.out.println(gsonRequest);
+        }
     }
 
     private void hanleScore() {
@@ -420,10 +424,13 @@ public class ServerHandler extends Thread {
     private void handleExit() {
         double srcPlayerId = (double) requestData.get(1);
         ServerHandler sourceSocket = getDestinationSocket((int) srcPlayerId);
-        ArrayList<Object> jsonArr = new ArrayList<>();
-        jsonArr.add(Constants.EXIT_PLAYER_GAME);
-        String gsonRequest = gson.toJson(jsonArr);
-        sourceSocket.out.println(gsonRequest);
+
+        if (sourceSocket != null && !sourceSocket.isInterrupted()) {
+            ArrayList<Object> jsonArr = new ArrayList<>();
+            jsonArr.add(Constants.EXIT_PLAYER_GAME);
+            String gsonRequest = gson.toJson(jsonArr);
+            sourceSocket.out.println(gsonRequest);
+        }
     }
 
     private void addFriend() {
@@ -472,13 +479,32 @@ public class ServerHandler extends Thread {
         PlayerDAO.makePlayerOnline((int) playerId);
     }
 
+    /*
     public static void closeSockets() {
         try {
+            System.err.println(PLAYERS_SOCKET.size());
             for (ServerHandler serverHandler : PLAYERS_SOCKET) {
+                System.err.println(PLAYERS_SOCKET.size());
                 PlayerDAO.logoutPlayer(serverHandler.playerId);
                 serverHandler.in.close();
                 serverHandler.out.close();
                 serverHandler.socket.close();
+                PLAYERS_SOCKET.remove(serverHandler);
+            }
+        } catch (IOException ex) {
+            System.err.println(ex.getMessage());
+        }
+    }*/
+    public static void closeSockets() {
+        try {
+            Iterator<ServerHandler> iterator = PLAYERS_SOCKET.iterator();
+            while (iterator.hasNext()) {
+                ServerHandler serverHandler = iterator.next();
+                PlayerDAO.logoutPlayer(serverHandler.playerId);
+                serverHandler.in.close();
+                serverHandler.out.close();
+                serverHandler.socket.close();
+                iterator.remove(); // Use iterator to safely remove the current element
             }
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
@@ -505,25 +531,44 @@ public class ServerHandler extends Thread {
         int player1Score = PlayerDAO.getPlayerScore(srcId);
         int player2Score = PlayerDAO.getPlayerScore(destId);
 
-        GameInfo info = new GameInfo(player2Name, player1Name, destId, srcId, player2Score, player1Score);
+        GameInfo info;
 
-        ArrayList<Object> jsonPlayer1 = new ArrayList<>();
-        jsonPlayer1.add(Constants.REJECT_INVITE);
-        jsonPlayer1.add(gson.toJson(info));
-        jsonPlayer1.add(true);
-        jsonPlayer1.add(type);
+        if (destinationSocket != null && !destinationSocket.isInterrupted()) {
+            info = new GameInfo(player2Name, player1Name, destId, srcId, player2Score, player1Score);
+            ArrayList<Object> jsonPlayer1 = new ArrayList<>();
+            jsonPlayer1.add(Constants.REJECT_INVITE);
+            jsonPlayer1.add(gson.toJson(info));
+            jsonPlayer1.add(true);
+            jsonPlayer1.add(type);
 
-        String gsonRequest1 = gson.toJson(jsonPlayer1);
-        destinationSocket.out.println(gsonRequest1);
+            String gsonRequest1 = gson.toJson(jsonPlayer1);
+            destinationSocket.out.println(gsonRequest1);
+        }
 
-        info = new GameInfo(player1Name, player2Name, srcId, destId, player1Score, player2Score);
+        if (sourceSocket != null && !sourceSocket.isInterrupted()) {
+            info = new GameInfo(player1Name, player2Name, srcId, destId, player1Score, player2Score);
+            ArrayList<Object> jsonPlayer2 = new ArrayList<>();
+            jsonPlayer2.add(Constants.REJECT_INVITE);
+            jsonPlayer2.add(gson.toJson(info));
+            jsonPlayer2.add(false);
+            jsonPlayer2.add(type);
 
-        ArrayList<Object> jsonPlayer2 = new ArrayList<>();
-        jsonPlayer2.add(Constants.REJECT_INVITE);
-        jsonPlayer2.add(gson.toJson(info));
-        jsonPlayer2.add(false);
-        jsonPlayer2.add(type);
-        String gsonRequest2 = gson.toJson(jsonPlayer2);
-        sourceSocket.out.println(gsonRequest2);
+            String gsonRequest2 = gson.toJson(jsonPlayer2);
+            sourceSocket.out.println(gsonRequest2);
+        }
+    }
+
+    private void close() {
+        try {
+            isRunning = false;
+            PlayerDAO.logoutPlayer(playerId);
+            out.close();
+            in.close();
+            socket.close();
+            PLAYERS_SOCKET.remove(this);
+            this.stop();
+        } catch (IOException ex) {
+            Logger.getLogger(ServerHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

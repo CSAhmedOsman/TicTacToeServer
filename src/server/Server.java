@@ -21,12 +21,11 @@ public class Server implements Runnable {
     Thread thread;
     boolean isRunning;
     private static Server singletonServer;
-    public static final int PORT_NUMBER= 5005;
-    
+
     {
         isRunning = true;
     }
-    
+
     private Server() {
     }
 
@@ -39,7 +38,7 @@ public class Server implements Runnable {
     }
 
     private void startConnection() throws IOException {
-        myServerSocket = new ServerSocket(PORT_NUMBER);
+        myServerSocket = new ServerSocket(util.Constants.PORT_NUMBER);
         thread = new Thread(this);
         thread.start();
     }
@@ -52,12 +51,7 @@ public class Server implements Runnable {
                 new ServerHandler(socket);
             }
         } catch (IOException e) {
-            try {
-                isRunning = false;
-                myServerSocket.close();
-            } catch (IOException ex) {
-                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While Running the Socket Connection");
-            }
+            close();
         }
     }
 
@@ -66,8 +60,9 @@ public class Server implements Runnable {
             ServerHandler.closeSockets();
             myServerSocket.close();
             isRunning = false;
+            thread.stop();
         } catch (IOException ex) {
-                Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While closeing the Socket Connection");
+            Util.showDialog(Alert.AlertType.ERROR, "close Connection", "Error While closeing the Socket Connection");
         }
     }
 

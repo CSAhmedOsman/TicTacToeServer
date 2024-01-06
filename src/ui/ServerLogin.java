@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -65,7 +64,6 @@ public class ServerLogin extends AnchorPane {
     protected final DropShadow dropShadow6;
     protected final PasswordField passwordField;
     private final Label statusLabel;
-    Server server;
 
     public ServerLogin() {
 
@@ -386,7 +384,7 @@ public class ServerLogin extends AnchorPane {
 
         textDBname.setText(Database.DB_NAME);
         textDBname.setDisable(true);
-        textServer.setText(String.valueOf(Server.PORT_NUMBER));
+        textServer.setText(String.valueOf(util.Constants.PORT_NUMBER));
         textServer.setDisable(true);
 
         btnConnect.setOnAction(e -> {
@@ -406,18 +404,18 @@ public class ServerLogin extends AnchorPane {
         String username = textUserName.getText();
         String password = passwordField.getText();
         try {
-            Database.connection= Database.getConnection(username, password);
+            Database.connection = Database.startConnection(username, password);
             navigateToNextScene();
-        } catch (SQLException|ClassNotFoundException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             // Connection failed
             statusLabel.setTextFill(Color.RED);
-            statusLabel.setText("DB Connection failed: \n" + e.getMessage()); 
+            statusLabel.setText("DB Connection failed: \n" + e.getMessage());
         }
     }
 
     private void connectToServer() {
         try {
-            server = Server.getServer();
+            Server.getServer();
         } catch (IOException e) {
             statusLabel.setTextFill(Color.RED);
             statusLabel.setText("Server Connection failed: \n" + e.getMessage());
@@ -425,10 +423,7 @@ public class ServerLogin extends AnchorPane {
     }
 
     private void navigateToNextScene() {
-        Stage stage = (Stage) this.getScene().getWindow();
-        Parent root = new ServerStatus(Database.connection, server);
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+        Parent root = new ServerStatus();
+        util.Util.displayScreen(root);
     }
 }

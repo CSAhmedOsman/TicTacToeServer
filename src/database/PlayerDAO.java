@@ -26,7 +26,7 @@ public class PlayerDAO {
         int authenticateId = -1;
 
         try {
-            String query = "SELECT id FROM player WHERE email = ? AND password = ?";
+            String query = "SELECT id FROM PLAYER WHERE EMAIL = ? AND PASSWORD = ?";
             preparedStatement = Database.connection.prepareStatement(query);
             preparedStatement.setString(1, player.getEmail());
             preparedStatement.setString(2, player.getPassword());
@@ -95,7 +95,7 @@ public class PlayerDAO {
         PreparedStatement preparedStatement = null;
         int rowsAffected = 0;
         try {
-            String query = "INSERT INTO player (name, email, password, isOnline, isAvailable, score) VALUES (?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO PLAYER (NAME, EMAIL, PASSWORD, ISONLINE, ISAVAILABLE, SCORE) VALUES (?, ?, ?, ?, ?, ?)";
             preparedStatement = Database.connection.prepareStatement(query);
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getEmail());
@@ -104,11 +104,7 @@ public class PlayerDAO {
             preparedStatement.setBoolean(5, false);
             preparedStatement.setInt(6, 0);
 
-            try {
-                rowsAffected = preparedStatement.executeUpdate();
-            } catch (Exception exception) {
-                rowsAffected = 0;
-            }
+            rowsAffected = preparedStatement.executeUpdate();
         } catch (SQLException e) {
             rowsAffected = 0;
         } finally {
@@ -422,7 +418,7 @@ public class PlayerDAO {
         ResultSet rs = null;
         boolean result = false;
         try {
-            preparedStatement = Database.connection.prepareStatement("UPDATE ROOT.PLAYER SET NAME = ?, email = ?, password = ? WHERE ID =" + player.getId());
+            preparedStatement = Database.connection.prepareStatement("UPDATE PLAYER SET NAME = ?, email = ?, password = ? WHERE ID =" + player.getId());
             preparedStatement.setString(1, player.getName());
             preparedStatement.setString(2, player.getEmail());
             preparedStatement.setString(3, player.getPassword());

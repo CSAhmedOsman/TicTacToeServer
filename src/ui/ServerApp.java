@@ -17,27 +17,16 @@ import javafx.stage.StageStyle;
  */
 public class ServerApp extends Application {
 
-    private double xOffset = 0;
-    private double yOffset = 0;
+    public static Stage stage;
 
     @Override
-    public void start(Stage stage) throws Exception {
-        Parent root = new ServerLogin();
-        root.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-
-        root.setOnMouseDragged(event -> {
-            stage.setX(event.getScreenX() - xOffset);
-            stage.setY(event.getScreenY() - yOffset);
-        });
-
+    public void start(Stage s) throws Exception {
+        stage = s;
         stage.initStyle(StageStyle.TRANSPARENT);
-        Scene scene = new Scene(root);
-        stage.setScene(scene);
-        stage.show();
+        Parent root = new ServerLogin();
+        util.Util.displayScreen(root);
     }
+
     /**
      * @param args the command line arguments
      */
