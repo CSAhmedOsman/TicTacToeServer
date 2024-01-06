@@ -12,3 +12,9 @@ os.arch=amd64
 os.version=10.0
 derby.system.home=C:\Users\Ahmed PC\Desktop\My temp\TicTacToe\Server\src\packages
 Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Sun Jan 07 01:00:18 EET 2024: Shutting down Derby engine
+----------------------------------------------------------------
+Sun Jan 07 01:00:18 EET 2024:
+Shutting down instance a816c00e-018c-defa-52fb-ffff893efffb on database directory C:\Users\Ahmed PC\Desktop\My temp\TicTacToe\Server\src\packages\TicTacToeDB with class loader sun.misc.Launcher$AppClassLoader@6f94fa3e 
+----------------------------------------------------------------

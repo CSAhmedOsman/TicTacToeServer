@@ -20,7 +20,6 @@ import database.PlayerDAO;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.Vector;
-
 import model.Message;
 import java.util.List;
 import java.util.logging.Level;
