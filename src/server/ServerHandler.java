@@ -503,7 +503,7 @@ public class ServerHandler extends Thread {
                 serverHandler.in.close();
                 serverHandler.out.close();
                 serverHandler.socket.close();
-                iterator.remove(); // Use iterator to safely remove the current element
+                PLAYERS_SOCKET.remove(iterator); // Use iterator to safely remove the current element
             }
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
